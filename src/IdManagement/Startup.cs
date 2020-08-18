@@ -24,6 +24,17 @@ namespace IdManagement
 
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins("https://localhost:6001", "https://localhost:5001")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddControllersWithViews(AppConfig.MVCControllerOptions);
 
             services.AddHttpClient();
@@ -100,6 +111,9 @@ namespace IdManagement
             app.UseHealthChecks("/healthz", AppHealthCheckOpts.HealthCheckOpts());
 
             app.UseRouting();
+
+            app.UseCors("default");
+
             app.UseAuthentication();
             app.UseAuthorization();
 
