@@ -48,6 +48,7 @@ namespace IS4
 
                     RedirectUris = { "https://localhost:5002/signin-oidc"},
                     PostLogoutRedirectUris = {"https://localhost:5002/signout-callback-oidc"},
+                    AllowedCorsOrigins = {"https://localhost:5002"},
                     AllowedScopes = {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,

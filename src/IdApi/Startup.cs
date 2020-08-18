@@ -28,6 +28,16 @@ namespace IdApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins("https://localhost:5002", "https://localhost:5001")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddControllers();
             services.AddMvcCore(options =>
             {
@@ -80,6 +90,7 @@ namespace IdApi
 
             app.UseRouting();
 
+            app.UseCors("default");
 
 
             //app.Use(next => context =>

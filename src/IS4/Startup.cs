@@ -24,6 +24,16 @@ namespace IS4
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins("https://localhost:5002", "https://localhost:6001")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
+
             services.AddControllersWithViews(options => options.Filters.Add<LoggingActionFilter>());
 
             services.AddLogging();
@@ -70,7 +80,9 @@ namespace IS4
             });
 
             app.UseRouting();
-            
+
+            app.UseCors("default");
+
             app.UseIdentityServer();
 
             app.UseAuthorization();
