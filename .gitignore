@@ -356,7 +356,6 @@ MigrationBackup/
 
 
 tempkey.jwk
-wwwroot/
 obj/
 Logs/
 bin/
