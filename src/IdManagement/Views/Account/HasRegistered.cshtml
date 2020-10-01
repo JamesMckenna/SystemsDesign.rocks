@@ -1,0 +1,13 @@
+﻿
+@{
+    ViewData["Title"] = "HasRegistered";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>You have registered for an account.</h2>
+@if (!String.IsNullOrWhiteSpace(TempData["HasRegistered"].ToString()))
+{
+    <p class="alert alert-info">@TempData["HasRegistered"].ToString()</p>
+}
+
+

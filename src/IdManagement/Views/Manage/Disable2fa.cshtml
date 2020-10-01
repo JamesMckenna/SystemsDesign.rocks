@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Disable two-factor authentication (2FA)";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="alert alert-warning" role="alert">
+    <p>
+        <span class="glyphicon glyphicon-warning-sign"></span>
+        <strong>This action disables 2FA.</strong>
+    </p>
+    <p>
+        If you disable 2FA, all recovery codes will become invalid and be over-written in our database. If later, you choose to re-enable 2FA, you will receive a new QR Code and Recovery Code Passwords. 
+    </p>
+</div>
+
+<div>
+    <form asp-action="Disable2fa" method="post" class="form-group">
+        <button class="btn btn-danger" type="submit">Disable 2FA</button>
+    </form>
+</div>

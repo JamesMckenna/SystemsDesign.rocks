@@ -1,0 +1,74 @@
+﻿@model EnableAuthenticatorViewModel
+@{
+    ViewData["Title"] = "QR and Recovery Codes";
+}
+
+<h4>@ViewData["Title"]</h4>
+<p class="text-success">@TempData["StatusMessage"]</p>
+<p class="text-success" id="date"></p>
+<div class="alert alert-warning" role="alert">
+    <p>
+        <span class="glyphicon glyphicon-warning-sign"></span>
+        <strong>Put these codes in a safe place. Write them down, take a screen shot (if on laptop or desktop).</strong>
+    </p>
+    
+    <p>Right mouse click and 'Print' or 'Screenshot' this page. Keep it somewhere safe. If you lose your mobile device, you can scan this QR Code into your new device and continue to to access your account.</p>
+    <p> NOTE: If you have an Authenticator App on more then 1 device, you can scan this QR Code into another device and use it to get your One-Time Use Passcode to log in.</p>
+    <p>If you lose your device that has the Authenticator App and don't have the recovery codes <strong>you will lose access to your account</strong>.</p>
+</div>
+<hr />
+<div class="row">
+    <h4>QR Code</h4>
+    <div class="col-md-12">
+        <div id="qrCode"></div>
+        <div id="qrCodeData" data-url="@Model.AuthenticatorUri"></div>
+
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <h4>These are your recovery codes. They are very important.</h4>
+        <p> If you lose or break the device that has the Authenticator App installed, these code are the <strong>ONLY WAY</strong> you can log into your account.</p>
+
+        <p>These are your 1 time use recovery codes. Once you login with a recovery code, it is automatically deleted from your account.</p>
+
+        @for (var row = 0; row < Model.RecoveryCodes.Length; row += 2)
+        {
+            <code>@Model.RecoveryCodes[row]</code><text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text><code>@Model.RecoveryCodes[row + 1]</code><br />
+        }
+        <p>If you have to use 9 of theses codes, we suggest you disable 2FA for the account. Delete the entry from the Authenticator App.</p>
+        <img style="width:50%;height:50%;" src="~/img/AuthApp1.png" /><img style="width:50%;height:50%;" src="~/img/AuthApp2.png" />
+        <p>Then re-enable 2FA for the account, scan a new QR Code into the Authenticator App and then print (or screen shot) the new QR Code and Recovery Codes.</p>
+
+    </div>
+    <hr />
+    <p><a asp-controller="Manage" asp-action="Index">Back to Manage Account page</a></p>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial");
+
+    <script type="text/javascript" src="~/lib/qrcode.min.js"></script>
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrCode"),
+            {
+                text: "@Html.Raw(Model.AuthenticatorUri)",
+                width: 150,
+                height: 150
+            });
+    </script>
+    <script>
+        var now = new Date();
+        var formattedDate = now.toLocaleString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit"
+        });
+
+        var datePtag = document.getElementById("date");
+        datePtag.innerHTML = formattedDate;
+    </script>
+}

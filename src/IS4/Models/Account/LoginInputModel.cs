@@ -9,6 +9,7 @@ namespace IS4.Models
     public class LoginInputModel
     {
         [Required]
+        [Display(Name = "Email Address or Username")]//IS4 QUiCKSTART was just Username, I extended Account Controller Login Action to accept either Username or Email
         public string Username { get; set; }
         [Required]
         public string Password { get; set; }

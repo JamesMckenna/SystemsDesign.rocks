@@ -1,3 +1,8 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{ 
+    string idManagementHost = Configuration["IdManagement:IdManagementHost"];
+}
 @model IS4.Models.LoginViewModel
 
 <div class="login-page">
@@ -24,7 +29,7 @@
 
                             <div class="form-group">
                                 <label asp-for="Username"></label>
-                                <input class="form-control" placeholder="Username" asp-for="Username" autofocus>
+                                <input class="form-control" placeholder="Email Address or Username" asp-for="Username">
                             </div>
                             <div class="form-group">
                                 <label asp-for="Password"></label>
@@ -43,6 +48,9 @@
                             }
                             <button class="btn btn-primary" name="button" value="login">Login</button>
                             <button class="btn btn-secondary" name="button" value="cancel">Cancel</button>
+                            <p>
+                                <a asp-protocol="https" asp-host="@idManagementHost" asp-controller="Manage" asp-action="ForgotPassword">Forgot your password?</a>
+                            </p>
                         </form>
                     </div>
                 </div>

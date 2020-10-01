@@ -1,0 +1,17 @@
+﻿
+@{
+    ViewData["Title"] = "Inspect Tokens";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Inspect Tokens</h1>
+
+@if (!String.IsNullOrWhiteSpace(TempData["Message"] as string))
+{
+    <h3>@TempData["Message"]</h3>
+}
+
+@if (!String.IsNullOrWhiteSpace(TempData["Token"] as string))
+{
+    <pre>@TempData["Token"]</pre>
+}

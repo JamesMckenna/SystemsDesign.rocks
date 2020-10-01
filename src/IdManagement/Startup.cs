@@ -1,7 +1,15 @@
+using IdManagement.AppConfiguration;
+using IdManagement.Models;
+using IdManagement.Services.DataProtectionServices;
 using IdManagement.Services.HealthCheck;
 using IdManagement.Services.Logging;
+using IdManagement.Services.MessageService;
+using IdManagement.Services.SecurityHeaders;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -10,6 +18,7 @@ using Polly;
 using Serilog;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 
 namespace IdManagement
 {
@@ -18,39 +27,68 @@ namespace IdManagement
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            AppCookieOptions.SetDI(Configuration);
+            AppOidcOptions.SetDI(Configuration);
+            AppIdentityModelTokenManagement.SetDI(Configuration);
         }
 
         public IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            string IdManagementId = Configuration["ApplicationIds:IdManagementId"];
+            string IdManagementURL = Configuration["AppURLS:IdManagementBaseUrl"];
+            string IdApiURL = Configuration["AppURLS:IdApiBaseUrl"];
+            string IS4URL = Configuration["AppURLS:IS4BaseUrl"];
 
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"C:\Secrets\"))
+                .SetApplicationName(Configuration["Properties:ApplicationName"]);
+
+            #region CORS Policy, CSP
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy =>
                 {
-                    policy.WithOrigins("https://localhost:6001", "https://localhost:5001")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                    policy.WithOrigins(IdApiURL, IS4URL).AllowAnyHeader().AllowAnyMethod();
                 });
             });
+            services.AddAntiforgery(options =>
+            {
+                options.Cookie.Name = Configuration["Properties:SharedAntiForgCookie"];
+                options.SuppressXFrameOptionsHeader = true;
+                options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["CookieExpireSeconds"].ToString()));
+            });
+            services.AddHsts(options =>
+            {
+                options.IncludeSubDomains = true;
+                options.MaxAge = TimeSpan.FromDays(365);
+                options.Preload = true;
+            });
+            #endregion
 
-            services.AddControllersWithViews(AppConfig.MVCControllerOptions);
+            services.AddControllersWithViews(AppMvcOptions.MVCControllerOptions);
+
+            services.AddHttpContextAccessor();
+
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdMangementConnectionStrings:IdManagementDbConnection"]));
+
+            services.AddIdentityCore<ApplicationUser>(AppIdentityOptions.App_Identity_Options)
+               .AddEntityFrameworkStores<ApplicationDbContext>()
+               .AddSignInManager()
+               .AddDefaultTokenProviders(); //Needed to generate tokens for password reset, change email, change phone number 2Fa
 
             services.AddHttpClient();
 
-            //TO COMPLETE:
-            //https: //github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks?WT.mc_id=-blog-scottha  
-            //https: //volosoft.com/Blog/Using-Health-Checks-in-ASP.NET-Boilerplate
-            //https: //github.com/Xabaril/AspNetCore.Diagnostics.HealthChecks/blob/master/samples/HealthChecks.Sample/Startup.cs
+            #region Health Checks
             services.AddHealthChecks()
-                    .AddIdentityServer(new Uri(AppConfig.IS4_BASE_URL))
+                    .AddIdentityServer(new Uri(IS4URL))
                     .AddCheck<SystemMemoryHealthCheck>("Memory")
-                    //AppConfig.CLIENT_ID string to get a Named HttpClient initiallized below in the services.AddClientAccessTokenClient extension method from Identity Model.
+                    //IdManagementId string to get a Named HttpClient initiallized below in the services.AddClientAccessTokenClient extension method from Identity Model.
                     //The method and client retrieve an access token which is required to do the Health Check of the IdApi. 
-                    //param 1) AppConfig.CLIENT_ID and _httpClientFactory from IoC to use named httpclient
-                    //param 2) the controller and action to test health
-                    .AddTypeActivatedCheck<IdApiHealthCheck>("IdApi", failureStatus: HealthStatus.Unhealthy, tags: new[] { "IdApiHealthCheckTag" }, args: new object[] { AppConfig.CLIENT_ID, "Token/Healthz" });
+                    //param 1) IdManagementId and _httpClientFactory from IoC to use named httpclient
+                    //param 2) the IdApi controller and action to test health
+                    .AddTypeActivatedCheck<IdApiHealthCheck>("IdApi", failureStatus: HealthStatus.Unhealthy, tags: new[] { "IdApiHealthCheckTag" }, args: new object[] { IdManagementId, "Token/Healthz" });
+            #endregion
 
             services.AddLogging();
 
@@ -59,37 +97,49 @@ namespace IdManagement
 
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
-            services.AddAuthentication(AppConfig.AuthOptions)
-                    .AddCookie(AppConfig.COOKIE, AppConfig.CookieOptions)
-                    .AddOpenIdConnect(AppConfig.OIDC, AppConfig.OidcOptions);
+            services.AddAuthentication(AppAuthenticationOptions.AuthOptions)
+               .AddCookie("Cookies", AppCookieOptions.CookieAuthOptions)
+               .AddOpenIdConnect("oidc", AppOidcOptions.OpenIdOptions);
+            services.Configure<CookiePolicyOptions>(AppCookieOptions.CookiePolicy);
 
-            services.AddAccessTokenManagement(AppConfig.AccessTokenManagment)
+
+            //changes all data protection tokens timeout period to 4 hours
+            services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(4));
+            //Tokens sent for ForgotPassword & ConfirmRegister will expire 4 hours after sending email to user
+            services.AddTransient<CustomEmailConfirmationTokenProvider<ApplicationUser>>();
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
+
+            #region Identity Model Token Management 
+            services.AddAccessTokenManagement(AppIdentityModelTokenManagement.TokenManagementOptions)
                     .ConfigureBackchannelHttpClient()
                     .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(new[]
                     {
                         TimeSpan.FromSeconds(1),
                         TimeSpan.FromSeconds(2),
                         TimeSpan.FromSeconds(3)
-                    })); 
+                    }));
 
-            services.AddUserAccessTokenClient("user_client", client => client.BaseAddress = new Uri(AppConfig.ID_API_BASE_URL + "/"));
-
-            services.AddClientAccessTokenClient(AppConfig.CLIENT_ID, configureClient: client => client.BaseAddress = new Uri(AppConfig.ID_API_BASE_URL + "/"));
+            //Identity Model creates Named HttpClient and sets the BaseUrl
+            services.AddUserAccessTokenClient("user_client", client => client.BaseAddress = new Uri(IdApiURL + "/"));
+            //Identity Model creates Named HttpClient and sets the BaseUrl
+            services.AddClientAccessTokenClient(IdManagementId, configureClient: client => client.BaseAddress = new Uri(IdApiURL + "/"));
+            #endregion
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //https: //docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/
-            //https: //docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/creating-and-throwing-exceptions
+            #region Exception Handling Middelware
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
             else
             {
+                //Will log unhandled exception as * unhandled * exception, 
+                //then redirect httpcontext to an Error controller and action method to display an error page.
                 app.UseExceptionHandler("/Error");
-                app.UseStatusCodePages();
-                app.UseStatusCodePagesWithReExecute("/Error/{0}");
+                app.UseStatusCodePagesWithReExecute("/Error/Error", "?statusCode={0}");
 
                 //If the proxy server also handles writing HSTS headers (for example, native HSTS support in IIS 10.0 (1709) or later),
                 //HSTS Middleware isn't required by the app. For more information, see Opt-out of HTTPS/HSTS on project creation.
@@ -97,18 +147,32 @@ namespace IdManagement
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            #endregion
+
             app.UseHttpsRedirection();//Can be handled by reverse proxy as can UseHsts()
+
+            app.UseSecurityHeadersMiddleware(new SecurityHeadersBuilder()
+                  .AddDefaultSecurePolicy()
+                  .AddCustomHeader("X-My-Custom-Header", "From-MiddleWareFiles")
+                );
 
             app.UseStaticFiles();
 
+            #region Serilog Options
+            //Will log unhandled exceptions from app.UseExceptionHandler("/Error"); as * HANDLED *. This will cause duplicate logs - one handled, one unhandled.
+            //Added a filter to Serilog config to filter out Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware, 
+            //preventing duplicate entiries but also remove the * unhandled * from the log entry
             app.UseSerilogRequestLogging(options =>
             {
-                options.EnrichDiagnosticContext = LogHelper.EnrichFromRequest;
+                options.EnrichDiagnosticContext = Services.Logging.LogHelper.EnrichFromRequest;
                 options.GetLevel = LogEventLevelHelper.CustomGetLevel;
             });
-            
+            #endregion
 
             app.UseHealthChecks("/healthz", AppHealthCheckOpts.HealthCheckOpts());
+
+
+            app.UseCookiePolicy();
 
             app.UseRouting();
 
@@ -120,8 +184,6 @@ namespace IdManagement
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHealthChecks("/healthz").RequireAuthorization();
-                //https: //docs.microsoft.com/en-us/aspnet/core/fundamentals/routing?view=aspnetcore-3.0#endpoint-routing-differences-from-earlier-versions-of-routing
-                //https: //docs.microsoft.com/en-us/aspnet/core/fundamentals/routing?view=aspnetcore-3.1#routing-basics
                 endpoints.MapDefaultControllerRoute().RequireAuthorization();
             });
         }

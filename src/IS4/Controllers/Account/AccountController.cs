@@ -9,14 +9,17 @@ using IdentityServer4.Models;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using IS4.Models;
+using IS4.Models.Account;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace IS4.Controllers
 {
@@ -35,6 +38,7 @@ namespace IS4.Controllers
         private readonly IClientStore _clientStore;
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -42,7 +46,8 @@ namespace IS4.Controllers
             IIdentityServerInteractionService interaction,
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
-            IEventService events)
+            IEventService events,
+            ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -50,8 +55,10 @@ namespace IS4.Controllers
             _clientStore = clientStore;
             _schemeProvider = schemeProvider;
             _events = events;
+            _logger = logger;
         }
 
+        #region SSO Login
         /// <summary>
         /// Entry point into the login workflow
         /// </summary>
@@ -109,10 +116,35 @@ namespace IS4.Controllers
 
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+                /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+                var loginCredentials = "";
+
+                //Check if user provided email or username for login
+                if (model.Username.IndexOf('@') > -1)
+                {
+                    //user logged in with username
+                    var user = await _userManager.FindByEmailAsync(model.Username);
+                    loginCredentials = user.UserName;
+                }
+                else
+                {
+                    //user logged in with email
+                    loginCredentials = model.Username;
+                }
+                /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+
+                /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+                var result = await _signInManager.PasswordSignInAsync(loginCredentials, model.Password, model.RememberLogin, lockoutOnFailure: true);
+                //var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, model.RememberLogin, lockoutOnFailure: true);
+                /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+
                 if (result.Succeeded)
                 {
-                    var user = await _userManager.FindByNameAsync(model.Username);
+                    /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+                    var user = await _userManager.FindByNameAsync(loginCredentials);
+                    //var user = await _userManager.FindByNameAsync(model.Username);
+                    /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+
                     await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
 
                     if (context != null)
@@ -143,8 +175,26 @@ namespace IS4.Controllers
                         throw new Exception("invalid return URL");
                     }
                 }
+                /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+                else if (result.RequiresTwoFactor)
+                {
+                    string twoFactorUrl = "~/Account/LoginWith2fa?ReturnUrl={0}";
+                    if (context != null || Url.IsLocalUrl(model.ReturnUrl))
+                    {
+                        return Redirect(string.Format(twoFactorUrl, HttpUtility.UrlEncode(model.ReturnUrl)));
+                    }
+                    else
+                    {
+                        return Redirect(string.Format(twoFactorUrl, HttpUtility.UrlEncode("~/")));
+                    }
+                }
+                /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
 
-                await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
+                /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+                await _events.RaiseAsync(new UserLoginFailureEvent(loginCredentials, "invalid credentials", clientId: context?.Client.ClientId));
+                //await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
+                /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+
                 ModelState.AddModelError(string.Empty, AccountOptions.InvalidCredentialsErrorMessage);
             }
 
@@ -152,8 +202,123 @@ namespace IS4.Controllers
             var vm = await BuildLoginViewModelAsync(model);
             return View(vm);
         }
+        #endregion
 
+        #region MFA
+        /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginWith2fa(bool rememberMe, string returnUrl = null)
+        {
+            // Ensure that the user has gone through the username & password screen first
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
 
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load two-factor authentication user.");
+            }
+
+            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
+            ViewData["ReturnUrl"] = returnUrl;
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model, bool rememberMe, string returnUrl = null)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, rememberMe, model.RememberMachine);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User with ID {UserId} logged in with 2fa.", user.Id);
+                return RedirectToLocal(returnUrl);
+            }
+            else if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
+                return RedirectToAction(nameof(Lockout));
+            }
+            else
+            {
+                _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
+                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+                return View();
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> LoginWithRecoveryCode(string returnUrl = null)
+        {
+            // Ensure the user has gone through the username & password screen first
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load two-factor authentication user.");
+            }
+
+            ViewData["ReturnUrl"] = returnUrl;
+
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model, string returnUrl = null)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new ApplicationException($"Unable to load two-factor authentication user.");
+            }
+
+            var recoveryCode = model.RecoveryCode.Replace(" ", string.Empty);
+
+            var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User with ID {UserId} logged in with a recovery code.", user.Id);
+                return RedirectToLocal(returnUrl);
+            }
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
+                return RedirectToAction(nameof(Lockout));
+            }
+            else
+            {
+                _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
+                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
+                return View();
+            }
+        }
+        /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+        #endregion
+
+        #region Logout
         /// <summary>
         /// Show logout page
         /// </summary>
@@ -206,14 +371,38 @@ namespace IS4.Controllers
 
             return View("LoggedOut", vm);
         }
+        #endregion
 
+        #region Access Denied, Lockout, RedirectToLocal
         [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
         }
 
+        /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Lockout()
+        {
+            return View();
+        }
 
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+        }
+        /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
+        #endregion
+
+        #region helper methods
         /*****************************************/
         /* helper APIs for the AccountController */
         /*****************************************/
@@ -279,6 +468,7 @@ namespace IS4.Controllers
         {
             var vm = await BuildLoginViewModelAsync(model.ReturnUrl);
             vm.Username = model.Username;
+            //vm.Email = model.Email;/* I ADDED - NOT PART OF IS4 QuickStart*/
             vm.RememberLogin = model.RememberLogin;
             return vm;
         }
@@ -344,5 +534,6 @@ namespace IS4.Controllers
 
             return vm;
         }
+        #endregion
     }
 }

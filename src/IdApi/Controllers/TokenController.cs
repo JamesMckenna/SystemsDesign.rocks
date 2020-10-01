@@ -6,12 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IdApi.Controllers
 {
-    //ERROR HANDLING FOR NET CORE API's
-    //https: //stackoverflow.com/questions/38630076/asp-net-core-web-api-exception-handling
-    //https: //www.devtrends.co.uk/blog/handling-errors-in-asp.net-core-web-api
-
-    //MAKE THIS API AN IDENTITY CORE APP
-    //https: //stackoverflow.com/questions/43224177/how-to-add-asp-net-identity-to-asp-net-core-when-webapi-template-is-selected
     [ApiController]
     [Authorize(AuthenticationSchemes = IdentityServerConstants.LocalApi.AuthenticationScheme)]
     public class TokenController : ControllerBase

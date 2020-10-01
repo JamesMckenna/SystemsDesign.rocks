@@ -1,175 +1,112 @@
-﻿using System;
-using System.Diagnostics;
-using IdManagement.Models;
+﻿using IdManagement.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Serilog;
+using System.Diagnostics;
 
 namespace IdManagement.Controllers
 {
-    [ApiController]
+    [Route("{controller}/{action}")]
     public class ErrorController : Controller
     {
-        private readonly ILogger<ErrorController> _logger;
-        private readonly IDiagnosticContext _diagnosticContext;
-        public ErrorController(ILogger<ErrorController> logger, IDiagnosticContext diagnosticContext)
-        {
-            _logger = logger;
-            _diagnosticContext = diagnosticContext; ;
-        }
+        public ErrorController() {}
 
+        #region Actions for Middelware Error Handling 
+        /// <summary>
+        ///app.UseExceptionHandler("/Error"); Global unhandled error handler that returns message to UI.
+        /// </summary>
         [Route("/error")]
         [AllowAnonymous]
         public IActionResult Error()
         {
-            //https: //docs.microsoft.com/en-us/dotnet/csharp/programming-guide/exceptions/creating-and-throwing-exceptions
             var error = HttpContext.Features.Get<IExceptionHandlerFeature>();
 
             if (error == null)
                 return Redirect("~/Home/Index");
-
+            
             ErrorViewModel errorResposne = BuildErrorResponse(error);
             HttpContext.Response.StatusCode = (int)errorResposne.StatusCode;
 
-            _diagnosticContext.Set("CatalogLoadTime", 1423);
             return View("Error", errorResposne);
         }
 
-        [Route("/Error/{0}")]
+
+        /// <summary>
+        /// app.UseStatusCodePagesWithReExecute global error handling
+        /// </summary>
+        /// <param name="statusCode"></param>
+        [HttpGet]
+        [Route("/error/{:id}")]
         [AllowAnonymous]
-        public IActionResult Error([Bind(Prefix = "id")] int statusCode)
+        public IActionResult Error(int? statusCode = null)
         {
-            //ALWAYS NULL - Find out why
-            //var statusCodeResult = HttpContext.Features.Get<IStatusCodeReExecuteFeature>();
+            if (statusCode < 399)
+                return Redirect("~/Home/Index");
 
-            //ALWAYS NULL - Find out why and/or fix ErrorViewModel
-            var error = HttpContext.Features.Get<IExceptionHandlerFeature>();
-
-            statusCode = HttpContext.Response.StatusCode;
+            int _statusCode = (int)statusCode;
             string title = null;
             string details = null;
-            
-            //// Switch to the appropriate page - FIX THIS, NOT YET FINISHED AND DOESN'T HANDLE ALL STATUSCODE ERRORS
-            switch (statusCode)
+            string emoji = null;
+
+            switch (_statusCode)
             {
                 case 400:
                     title = "Bad Request";
-                    details = "Our helper Elves are telling us that you made a bad request. (O.O)";
+                    details = "Our helper Elves are telling us that you made a bad request.";
+                    emoji = "&#128562;";
+                    break;
+                case 401:
+                    title = "Unathorized";
+                    details = "We are going to need you to sign in.";
+                    emoji = "&#128563";
+                    break;
+                case 403:
+                    //App will redirect to /Access/Denied
                     break;
                 case 404:
                     title = "Not Found";
-                    details = "Sorry, but our helper Elves couldn't find your request. \u00AF\u005C\u005F\u0028\u006F\u002E\u006F\u0029\u005F\u002F\u00AF";
+                    details = "Sorry, but our helper Elves weren't able to find that.";
+                    emoji = "&#128533";
                     break;
-                case 500:
-                    title = "Internal Server Error";
-                    details = "A hiccup has occured, our helper Elves are looking into it. \u00AF\u005C\u005F\u0028\u006F\u002E\u006F\u0029\u005F\u002F\u00AF;";
+                case 408:
+                    title = "Request Timeout";
+                    details = "Sorry, but our helper Elves couldn't get the trend mill up to speed, your request timed out.";
+                    emoji = "&#128565";
                     break;
-                case 0:
-                    statusCode = 500;
+                case 501:
+                    title = "Not Implemented";
+                    details = "Our helper Elves aren't willing to preform that action for you.";
+                    emoji = "&#128542";
+                    break;
+                default:
+                    _statusCode = 500;
                     title = "Internal Server Error";
-                    details = "A hiccup has occured, our helper Elves are looking into it. \u00AF\u005C\u005F\u0028\u006F\u002E\u006F\u0029\u005F\u002F\u00AF;";
+                    details = "A hiccup has occured, our helper Elves are looking into it.";
+                    emoji = "&#128533";
                     break;
             }
 
-            var evm = new ErrorViewModel(Activity.Current?.Id ?? HttpContext.TraceIdentifier, details, title, statusCode, error);
+            var evm = new ErrorViewModel(Activity.Current?.Id ?? HttpContext.TraceIdentifier, details, title, _statusCode, emoji);
 
-            _diagnosticContext.Set("CatalogLoadTime", 1423);
             return View("Error", evm);
         }
+        #endregion
 
-        internal ErrorViewModel BuildErrorResponse(IExceptionHandlerFeature context)
+
+        #region 
+        private ErrorViewModel BuildErrorResponse(IExceptionHandlerFeature context)
         {
-
-            /*************** FIX THIS / FINISH THIS ******************/
-
             IExceptionHandlerFeature _context = context;
-            Exception exception = _context?.Error;
+
             int code = 500;
-            string msg = "A hiccup has occured, our helper Elves are looking into it. \u00AF\u005C\u005F\u0028\u006F\u002E\u006F\u0029\u005F\u002F\u00AF;";
-            string title = exception.Message;
+            string detail = "A hiccup has occured, our helper Elves are looking into it.";
+            string title = "An Internal Server Error has occurred";
+            string emoji = "&#128533";
 
-            if (exception is AccessViolationException) 
-            { 
-                code = 401;
-                msg = "I regret to say, but that was an Unauthorized Request. :( \n  Please Log In";
-            }
-            else if (exception is AggregateException) 
-            { 
-                code = 500;
-                msg = "";
-            }
-            else if (exception is ApplicationException) 
-            { 
-                code = 500;
-                msg = "";
-            }
-            else if (exception is ArgumentNullException) 
-            { 
-                code = 400;
-                msg = "";
-            }
-            else if (exception is ArgumentOutOfRangeException) 
-            { 
-                code = 400;
-                msg = "Some Message";
-            }
-            else if (exception is ArgumentException)
-            {
-                code = 400;
-                msg = "";
-            }
-            else if (exception is ArithmeticException) 
-            { 
-                code = 400;
-                msg = "";
-            }
-            else if (exception is DivideByZeroException) 
-            { 
-                code = 403;
-                msg = "";
-            }
-            else if (exception is IndexOutOfRangeException) 
-            { 
-                code = 412;
-                msg = "";
-            }
-            else if (exception is NullReferenceException) 
-            {
-                code = 412;
-                msg = "";
-            }
-            else if (exception is OutOfMemoryException) 
-            { 
-                code = 500;
-                msg = "";
-            }
-            else if (exception is SystemException) 
-            { 
-                code = 500;
-                msg = "";
-            }
-            else if (exception is TimeoutException) 
-            { 
-                code = 504;
-                msg = "Sorry, but our helper Elves couldn't get the trend mill up to speed, your request timed out. \u00AF\u005C\u005F\u0028\u006F\u002E\u006F\u0029\u005F\u002F\u00AF";
-            }
-            else if (exception is UnauthorizedAccessException) 
-            { 
-                code = 401;
-                msg = "I regret to say, but that was an Unauthorized Request. :( \n  Please Log In";
-            }
-            else if (exception is Exception) 
-            { 
-                code = 500;
-                msg = "";
-            }
-
-            ErrorViewModel response = new ErrorViewModel(Activity.Current?.Id ?? HttpContext.TraceIdentifier, msg, title, code, _context);
+            ErrorViewModel response = new ErrorViewModel(Activity.Current?.Id ?? HttpContext.TraceIdentifier, detail, title, code, emoji);
        
             return response;
         }
+        #endregion
     }
 }

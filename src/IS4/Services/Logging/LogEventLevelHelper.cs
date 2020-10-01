@@ -24,7 +24,7 @@ namespace IS4.Services.Logging
         public static LogEventLevel CustomGetLevel(HttpContext context, double _, Exception ex) =>
            ex != null
                ? LogEventLevel.Error
-               : context.Response.StatusCode > 499
+               : context.Response.StatusCode > 399
                    ? LogEventLevel.Error
                    : IsHealthCheckEndpoint(context) // Not an error, check if it was a health check
                         ? LogEventLevel.Verbose // Was a health check, use Verbose

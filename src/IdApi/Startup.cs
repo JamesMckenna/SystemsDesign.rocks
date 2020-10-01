@@ -1,18 +1,12 @@
-using System;
-using System.Threading.Tasks;
-using IdentityModel.AspNetCore.OAuth2Introspection;
-using IdentityServer4;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
+using System;
 
 namespace IdApi
 {
@@ -25,7 +19,6 @@ namespace IdApi
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors(options =>
@@ -78,7 +71,6 @@ namespace IdApi
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -92,40 +84,12 @@ namespace IdApi
 
             app.UseCors("default");
 
-
-            //app.Use(next => context =>
-            //{
-            //    var endpoint = context.GetEndpoint();
-            //    if (endpoint is null)
-            //    {
-            //        return Task.CompletedTask;
-            //    }
-
-            //    Console.WriteLine($"\nHERE HERE Endpoint: {endpoint.DisplayName}");
-
-            //    if (endpoint is RouteEndpoint routeEndpoint)
-            //    {
-            //        Console.WriteLine("\nHERE HERE Endpoint has route pattern: " +
-            //            routeEndpoint.RoutePattern.RawText);
-            //    }
-
-            //    foreach (var metadata in endpoint.Metadata)
-            //    {
-            //        Console.WriteLine($"\nHERE HERE Endpoint has metadata: {metadata}");
-            //    }
-
-            //    return Task.CompletedTask;
-            //});
-
-
-
-
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllerRoute(name: "Token", pattern: "Token/{action}", defaults: new { controller = "Token", action = "Get" }) ;
+                endpoints.MapControllerRoute(name: "Token", pattern: "Token/{action}", defaults: new { controller = "Token", action = "Get" });
 
                 endpoints.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}")
                          .RequireAuthorization("ApiScope");

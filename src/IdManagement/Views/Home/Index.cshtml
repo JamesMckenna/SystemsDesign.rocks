@@ -1,21 +1,13 @@
-﻿@using Microsoft.AspNetCore.Authentication
+﻿@{
+    ViewData["Title"] = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
 
-<h2>Claims</h2>
+<h2>@ViewData["Title"]</h2>
+<h5>You are on the Home Page of the Identity Management Application</h5>
+@if (!String.IsNullOrWhiteSpace(TempData["StatusMessage"] as string))
+{
+    <p class="alert alert-info">@TempData["StatusMessage"].ToString()</p>
+}
 
-<dl>
-    @foreach (var claim in User.Claims)
-    {
-        <dt>@claim.Type</dt>
-        <dd>@claim.Value</dd>
-    }
-</dl>
-
-<h2>Properties</h2>
-
-<dl>
-    @foreach (var prop in (await Context.AuthenticateAsync()).Properties.Items)
-    {
-        <dt>@prop.Key</dt>
-        <dd>@prop.Value</dd>
-    }
-</dl>
+<p>@ViewData["User"]</p>

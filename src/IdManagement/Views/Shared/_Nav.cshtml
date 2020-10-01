@@ -28,77 +28,47 @@
                     <ul class="navbar-nav flex-grow-1">
 
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-light" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-light" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
 
-                        <li>
-                            <ul class="navbar-nav mr-auto">
+                        @if (this.Context.User.Identity.IsAuthenticated)
+                        {
+                            <li>
+                                <ul class="navbar-nav mr-auto">
 
-                                <li class="nav-item dropdown">
+                                    <li class="nav-item dropdown">
 
-                                    <a href="#" type="button" class="dropdown-toggle nav-link text-light" data-toggle="dropdown">Tokens<b class="caret"></b></a>
+                                        <a href="#" type="button" class="dropdown-toggle nav-link text-light" data-toggle="dropdown">Developer Links<b class="caret"></b></a>
 
-                                    <div class="dropdown-menu">
+                                        <div class="dropdown-menu">
 
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="Secure">Secure</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Home" asp-action="Secure">Secure</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="AccessToken">View Access Token</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="AccessToken">View Access Token</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="DiscoveryDocument">Discovery Document</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="DiscoveryDocument">Discovery Document</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="UserInfoEndpoint">User Info Endpoint</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="UserInfoEndpoint">User Info Endpoint</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="TokenIntrospectionEndpoint">Token Introspection Endpoint</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="TokenIntrospectionEndpoint">Token Introspection Endpoint</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="TokenRevocationEndpoint">Token Revocation Endpoint</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="TokenRevocationEndpoint">Token Revocation Endpoint</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="CallApiAsUser">Call Api As User</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsUser">Call Api As User</a>
 
-                                        <a class="dropdown-item text-dark" asp-controller="Token" asp-action="CallApiAsClient">Call Api As Client</a>
+                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsClient">Call Api As Client</a>
 
-                                    </div>
+                                            <a class="dropdown-item text-dark" asp-controller="healthz">Application Health</a>
 
-                                </li>
-
-                            </ul>
-                        </li>
-
-                        <li>
-                            <ul class="navbar-nav mr-auto">
-
-                                <li class="nav-item dropdown">
-
-                                    <a href="#" type="button" class="dropdown-toggle nav-link text-light" data-toggle="dropdown">Errors<b class="caret"></b></a>
-
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeUnauthorized">Fake Unauthorized</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeValidationProblem">Fake Validation Problem</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeForbid">Fake Forbid</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeBadRequest">Fake Bad Request</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeNotFound">Fake Not Found</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeArgumentNullException">Fake Argument Null Exception</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeArgumentOutOfRangeException" asp-route-numberLessThan10="-1">Fake Arg Out Of Range</a>
-
-                                        <a class="dropdown-item text-dark" asp-controller="Home" asp-action="FakeArgumentException" asp-route-stringArg="">Fake Arg Exception</a>
-
-
-                                    </div>
-
-                                </li>
-
-                            </ul>
-                        </li>
-
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
 
                         <li>
                             @if (!string.IsNullOrWhiteSpace(name))
@@ -109,7 +79,23 @@
                                         <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">@name <b class="caret"></b></a>
 
                                         <div class="dropdown-menu">
-                                            <a class="dropdown-item text-dark" asp-action="Logout" asp-controller="Home">Logout</a>
+                                            <a class="dropdown-item text-dark" asp-action="Index" asp-controller="Manage">Manage Account</a>
+                                            <a class="dropdown-item text-dark" asp-action="Logout" asp-controller="Account">Logout</a>
+                                        </div>
+
+                                    </li>
+                                </ul>
+                            }
+                            else
+                            {
+                                <ul class="navbar-nav mr-auto">
+                                    <li class="nav-item dropdown">
+
+                                        <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">Log In / Register<b class="caret"></b></a>
+
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item text-dark" asp-action="Login" asp-controller="Account">Log In</a>
+                                            <a class="dropdown-item text-dark" asp-action="Register" asp-controller="Account">Register</a>
                                         </div>
 
                                     </li>

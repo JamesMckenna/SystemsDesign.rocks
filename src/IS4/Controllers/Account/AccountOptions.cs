@@ -10,11 +10,11 @@ namespace IS4.Controllers
     {
         public static bool AllowLocalLogin = true;
         public static bool AllowRememberLogin = true;
-        public static TimeSpan RememberMeLoginDuration = TimeSpan.FromDays(30);
+        public static TimeSpan RememberMeLoginDuration = TimeSpan.FromDays(1);
 
-        public static bool ShowLogoutPrompt = true;
-        public static bool AutomaticRedirectAfterSignOut = false;
+        public static bool ShowLogoutPrompt = false;
+        public static bool AutomaticRedirectAfterSignOut = true;
 
-        public static string InvalidCredentialsErrorMessage = "Invalid username or password";
+        public static string InvalidCredentialsErrorMessage = "Invalid username, email or password";
     }
 }
