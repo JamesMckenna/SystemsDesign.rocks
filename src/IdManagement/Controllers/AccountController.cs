@@ -1,4 +1,4 @@
-﻿using IdManagement.Models;
+﻿using IdentityCommon;
 using IdManagement.Models.AccountViewModels;
 using IdManagement.Services.MessageService;
 using Microsoft.AspNetCore.Authentication;

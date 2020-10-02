@@ -2,9 +2,9 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using IdentityCommon;
+using IdentityDataCommon;
 using IS4.AppConfiguration;
-using IS4.Data;
-using IS4.Models;
 using IS4.Services.Logging;
 using IS4.Services.SecurityHeaders;
 using Microsoft.AspNetCore.Builder;

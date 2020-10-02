@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 
-namespace IS4.Data.Migrations
+namespace IdentityDataCommon
 {
     public partial class CreateIdentitySchema : Migration
     {

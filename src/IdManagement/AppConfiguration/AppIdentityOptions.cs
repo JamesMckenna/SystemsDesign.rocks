@@ -1,19 +1,11 @@
-﻿using IdManagement.Models;
+﻿using IdentityCommon;
 using IdManagement.Services.DataProtectionServices;
 using Microsoft.AspNetCore.Identity;
-using System;
 
 namespace IdManagement.AppConfiguration
 {
     internal static class AppIdentityOptions
     {
-        //internal static Action<IdentityOptions> GetOps;
-
-        //static AppIdentityOptions()
-        //{
-        //    GetOps = App_Identity_Options;
-        //}
-
         internal static void App_Identity_Options(IdentityOptions options)
         {
             options.Password.RequireDigit = true;

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using System;
 
-namespace IS4.Data.Migrations
+namespace IdentityDataCommon
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20180109192453_CreateIdentitySchema")]

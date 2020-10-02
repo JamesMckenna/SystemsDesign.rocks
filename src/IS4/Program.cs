@@ -51,25 +51,6 @@ namespace IS4
 
             try
             {
-                var seed = args.Contains("/seed"); 
-                //var seed = true;
-                if (seed)
-                {
-                    args = args.Except(new[] { "/seed" }).ToArray();
-                }
-
-                var host = CreateHostBuilder(args).Build();
-
-                if (seed)
-                {
-                    Log.Information("Seeding database...");
-                    var config = host.Services.GetRequiredService<IConfiguration>();
-                    var connectionString = config.GetConnectionString("DefaultConnection");
-                    SeedData.EnsureSeedData(connectionString);
-                    Log.Information("Done seeding database.");
-                    return 0;
-                }
-
                 Log.Information("Starting host...");
                 CreateHostBuilder(args).Build().Run();
                 return 0;

@@ -3,17 +3,24 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Models\Home\**" />
+    <Content Remove="Models\Home\**" />
+    <EmbeddedResource Remove="Models\Home\**" />
+    <None Remove="Models\Home\**" />
+  </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="IdentityServer4" Version="4.0.0" />
-    <PackageReference Include="IdentityServer4.AspNetIdentity" Version="4.0.0" />
+    <PackageReference Include="IdentityServer4" Version="4.1.0" />
+    <PackageReference Include="IdentityServer4.AspNetIdentity" Version="4.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="3.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="3.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="3.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="3.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.8" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
 
@@ -35,6 +42,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Folder Include="Models\Home\" />
+    <ProjectReference Include="..\..\IdentityCommon\IdentityCommon.csproj" />
+    <ProjectReference Include="..\..\IdentityDataCommon\IdentityDataCommon.csproj" />
   </ItemGroup>
 </Project>
