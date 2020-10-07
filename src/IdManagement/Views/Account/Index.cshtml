@@ -1,4 +1,4 @@
-﻿@model IdManagement.Models.ManageViewModels.IndexViewModel
+﻿@model IdManagement.Models.AccountViewModels.IndexViewModel
 @{
     ViewData["Title"] = "Manage your Account";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -29,14 +29,14 @@
             @if (Model.PhoneNumber != null)
             {
                 <br />
-                <text>[&nbsp;&nbsp;<a asp-controller="Manage" asp-action="PhoneNumber">Change</a>&nbsp;&nbsp;]</text>
-                <form style="display: inline;" asp-controller="Manage" asp-action="RemovePhoneNumber" method="post" role="form">
+                <text>[&nbsp;&nbsp;<a asp-controller="Account" asp-action="PhoneNumber">Change</a>&nbsp;&nbsp;]</text>
+                <form style="display: inline;" asp-controller="Account" asp-action="RemovePhoneNumber" method="post" role="form">
                     [<button type="submit" class="btn-link">Remove</button>]
                 </form>
             }
             else
             {
-                <text>[&nbsp;&nbsp;<a asp-controller="Manage" asp-action="PhoneNumber">Add</a>&nbsp;&nbsp;]</text>
+                <text>[&nbsp;&nbsp;<a asp-controller="Account" asp-action="PhoneNumber">Add</a>&nbsp;&nbsp;]</text>
             }
         </dd>
     </dl>
@@ -46,7 +46,7 @@
     <dl class="dl-horizontal">
         <dt>Password:</dt>
         <dd>
-            <text>[&nbsp;&nbsp;<a asp-controller="Manage" asp-action="ChangePassword">Change</a>&nbsp;&nbsp;]</text>
+            <text>[&nbsp;&nbsp;<a asp-controller="Account" asp-action="ChangePassword">Change</a>&nbsp;&nbsp;]</text>
         </dd>
     </dl>
 
@@ -75,7 +75,7 @@
                 <dl class="dl-horizontal">
                     <dt>Authentication App:</dt>
                     <dd>
-                        <form asp-controller="Manage" asp-action="Disable2faWarning" method="get" class="form-horizontal" role="form">
+                        <form asp-controller="Account" asp-action="Disable2faWarning" method="get" class="form-horizontal" role="form">
                             Enabled [<button type="submit" class="btn-link">Disable 2FA</button>]
                         </form>
                     </dd>
@@ -83,7 +83,7 @@
             }
             else
             {
-                <form asp-controller="Manage" asp-action="EnableAuthenticator" method="get" class="form-horizontal" role="form">
+                <form asp-controller="Account" asp-action="EnableAuthenticator" method="get" class="form-horizontal" role="form">
                     [<button type="submit" class="btn-link">Enable 2FA</button>] Disabled
                 </form>
             }

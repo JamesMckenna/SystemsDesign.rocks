@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IdManagement.Models.ManageViewModels
+namespace IdManagement.Models.AccountViewModels
 {
     public class ResetPasswordViewModel
     {

@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IdManagement.Models.ManageViewModels
+namespace IdManagement.Models.AccountViewModels
 {
-    public class AddPhoneNumberViewModel
+    public class VerifyPhoneNumberViewModel
     {
+        [Required]
+        public string Code { get; set; }
+
         [Required]
         [Phone]
         [Display(Name = "Phone number")]

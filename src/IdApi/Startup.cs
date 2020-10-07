@@ -1,12 +1,18 @@
+using IdentityCommon;
+using IdentityDataCommon;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.IO;
 
 namespace IdApi
 {
@@ -21,6 +27,39 @@ namespace IdApi
 
         public void ConfigureServices(IServiceCollection services)
         {
+
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"C:\Secrets\"))
+                    .SetApplicationName(Configuration["Properties:ApplicationName"]);
+
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdApiConnectionStrings:IdApiDbConnection"]));
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                // Password settings.
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequiredUniqueChars = 1;
+
+                // Lockout settings.
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
+
+                // User settings.
+                options.User.AllowedUserNameCharacters =
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._+";
+                options.User.RequireUniqueEmail = false;
+            });
+
+
+
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy =>
@@ -54,9 +93,17 @@ namespace IdApi
                 });
             });
 
+            services.AddLogging();
             services.AddDistributedMemoryCache();
 
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+            .AddOAuth2Introspection("introspection", options =>
+            {
+                options.Authority = "https://localhost:5001";
+
+                options.ClientId = "IdManagement";
+                options.ClientSecret = "secret";
+            })
             .AddIdentityServerAuthentication("IdentityServerAccessToken", options =>
             {
                 options.Authority = "https://localhost:5001";
@@ -78,6 +125,7 @@ namespace IdApi
                 app.UseDeveloperExceptionPage();
             }
 
+            
             app.UseHttpsRedirection();
 
             app.UseRouting();

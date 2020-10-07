@@ -1,4 +1,4 @@
-﻿@model IdManagement.Models.ManageViewModels.VerifyPhoneNumberViewModel
+﻿@model IdManagement.Models.AccountViewModels.VerifyPhoneNumberViewModel
 @{
     ViewData["Title"] = "Verify Phone Number";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -6,7 +6,7 @@
 
 <h1>@ViewData["Title"].</h1>
 
-<form asp-controller="Manage" asp-action="VerifyPhoneNumber" method="post" class="form-horizontal" role="form">
+<form asp-controller="Account" asp-action="VerifyPhoneNumber" method="post" class="form-horizontal" role="form">
     <input asp-for="PhoneNumber" type="hidden" value="@TempData["PhoneNumber"]"/>
     <h4>Add a phone number.</h4>
     <hr />

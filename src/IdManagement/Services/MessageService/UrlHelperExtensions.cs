@@ -17,8 +17,8 @@ namespace IdManagement.Services.MessageService
         public static string ResetPasswordCallbackLink(this IUrlHelper urlHelper, string userId, string code, string scheme)
         {
             return urlHelper.Action(
-                action: nameof(ManageController.ResetPassword),
-                controller: "Manage",
+                action: nameof(AccountController.ResetPassword),
+                controller: "Account",
                 values: new { userId, code },
                 protocol: scheme);
         }

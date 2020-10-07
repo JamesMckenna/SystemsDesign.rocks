@@ -1,11 +1,11 @@
-﻿@model IdManagement.Models.ManageViewModels.AddPhoneNumberViewModel
+﻿@model IdManagement.Models.AccountViewModels.AddPhoneNumberViewModel
 @{
     ViewData["Title"] = "Manage Account Phone Number";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <h3>@ViewData["Title"].</h3>
-<form asp-controller="Manage" asp-action="PhoneNumber" method="post" class="form-horizontal" role="form">
+<form asp-controller="Account" asp-action="PhoneNumber" method="post" class="form-horizontal" role="form">
         <div asp-validation-summary="All" class="text-danger"></div>
         <div class="form-group">
             <label asp-for="PhoneNumber" class="col-md-2 control-label"></label>

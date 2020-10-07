@@ -22,6 +22,7 @@
       "launchBrowser": false,
       "applicationUrl": "https://localhost:6001",
       "environmentVariables": {
+        "SECRETS_PATH": "C:\\Secrets\\AppSecrets.json",
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     }
