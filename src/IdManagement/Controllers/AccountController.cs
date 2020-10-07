@@ -301,14 +301,14 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/PhoneNumber(AddPhoneNumberViewModel) - userManager unable to retrieve {0}'s information.");
+                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - userManager unable to retrieve {0}'s information.");
                 throw new InvalidOperationException("An error occurred retieving your account information.");
             }
 
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, model.PhoneNumber);
             if (code == null)
             {
-                _logger.LogError("~/Manage/PhoneNumber(AddPhoneNumberViewModel) - userManage was not able to generate verification code.");
+                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - userManager was not able to generate verification code.");
                 throw new InvalidOperationException("An error occurred generating the verification code.");
             }
 
@@ -318,7 +318,7 @@ namespace IdManagement.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("~/Manage/PhoneNumber(AddPhoneNumberViewModel) - An error occurred sending sms verification code. {0}", ex);
+                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - An error occurred sending sms verification code. {0}", ex);
                 throw;
             }
 
@@ -346,14 +346,14 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/VerifyPhoneNumber(VerifyPhoneNumberViewModel) - userManager unable to retrieve {0}'s information.");
+                _logger.LogError("~/Account/VerifyPhoneNumber(VerifyPhoneNumberViewModel) - userManager unable to retrieve {0}'s information.");
                 throw new InvalidOperationException("An error occurred retieving your account information.");
             }
 
             var result = await _userManager.ChangePhoneNumberAsync(user, model.PhoneNumber, model.Code);
             if (!result.Succeeded)
             {
-                _logger.LogError("~/Manage/VerifyPhoneNumber(VerifyPhoneNumberViewModel) - userManager unable to change phone number for {0}'s account.");
+                _logger.LogError("~/Account/VerifyPhoneNumber(VerifyPhoneNumberViewModel) - userManager unable to change phone number for {0}'s account.");
                 throw new InvalidOperationException("An error occurred changing the phone number listed on your account.");
             }
 
@@ -369,14 +369,14 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/RemovePhoneNumber - userManager unable to retrieve id:{0}'s account information.", id);
+                _logger.LogError("~/Account/RemovePhoneNumber - userManager unable to retrieve id:{0}'s account information.", id);
                 throw new ApplicationException($"Unable to load user information.");
             }
 
             var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, null);
             if (!setPhoneResult.Succeeded)
             {
-                _logger.LogError("~/Manage/RemovePhoneNumber - and error occured removing a phone number from id:{0}'s account information.", id);
+                _logger.LogError("~/Account/RemovePhoneNumber - and error occured removing a phone number from id:{0}'s account information.", id);
                 throw new ApplicationException($"Unexpected error occurred removing the phone number.");
             }
 
@@ -550,7 +550,7 @@ namespace IdManagement.Controllers
         {
             if (code == null)
             {
-                _logger.LogError("~/Manage/ResetPassword(string) - ResetPassword code was null.");
+                _logger.LogError("~/Account/ResetPassword(string) - ResetPassword code was null.");
                 throw new ArgumentNullException("A code must be supplied for password reset.");
             }
             var model = new ResetPasswordViewModel { Code = code };
@@ -570,14 +570,14 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
-                _logger.LogError("~/Manage/ResetPassword(ResetPasswordViewModel) - userManager unable to retrieve {0}'s account information.");
+                _logger.LogError("~/Account/ResetPassword(ResetPasswordViewModel) - userManager unable to retrieve {0}'s account information.");
                 throw new InvalidOperationException("An error occurred retrieving user account information.");
             }
 
             var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
             if (!result.Succeeded)
             {
-                _logger.LogError("~/Manage/ResetPassword(ResetPasswordViewModel) - userManager unable to reset password for {0}'s account information.");
+                _logger.LogError("~/Account/ResetPassword(ResetPasswordViewModel) - userManager unable to reset password for {0}'s account information.");
                 throw new InvalidOperationException("An error occurred resetting the account password.");
             }
 
@@ -604,13 +604,13 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/Disable2fWarning - userManager unable to retrieve id:{0}'s account information.", id);
+                _logger.LogError("~/Account/Disable2fWarning - userManager unable to retrieve id:{0}'s account information.", id);
                 throw new InvalidOperationException($"Unable to load account information.");
             }
 
             if (!user.TwoFactorEnabled)
             {
-                _logger.LogError("~/Manage/Disable2faWarning - an error occurred disabling 2fa for user id:{0}. 2FA was returned as false. User should not have been able to hit this endpoint.", id);
+                _logger.LogError("~/Account/Disable2faWarning - an error occurred disabling 2fa for user id:{0}. 2FA was returned as false. User should not have been able to hit this endpoint.", id);
                 throw new InvalidOperationException($"Unexpected error occurred disabling 2FA.");
             }
             return View(nameof(Disable2fa));
@@ -624,14 +624,14 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/Disable2fa - userManager could not retrieve id:{0}'s account information.", id);
+                _logger.LogError("~/Account/Disable2fa - userManager could not retrieve id:{0}'s account information.", id);
                 throw new InvalidOperationException($"Unable to load user information.");
             }
 
             var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
             if (!disable2faResult.Succeeded)
             {
-                _logger.LogError("~/Manager/Disable2fa - an error occurred disabling 2fa for user id:{0}.", id);
+                _logger.LogError("~/Account/Disable2fa - an error occurred disabling 2fa for user id:{0}.", id);
                 throw new InvalidOperationException($"Unexpected error occurred disabling 2FA for user id:{id}.");
             }
 
@@ -642,7 +642,7 @@ namespace IdManagement.Controllers
             if (!resetResult.Succeeded)
             {
                 //In this case an Error does not need to be thrown. But log so developer knows something went wrong.
-                _logger.LogError("~/Manage/Disable2fa - An error occurred: userManger couldn't ResetAuthenticatorKeyAsync");
+                _logger.LogError("~/Account/Disable2fa - An error occurred: userManger couldn't ResetAuthenticatorKeyAsync");
             }
 
             TempData["StatusMessage"] = "You have disabled two factor authentication. 2FA can be re-enabled at anytime.";
@@ -657,7 +657,7 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/EnableAuthenticator - userManager could not get account information for user id:{0}", id);
+                _logger.LogError("~/Account/EnableAuthenticator - userManager could not get account information for user id:{0}", id);
                 throw new InvalidOperationException($"Unable to load user information.");
             }
 
@@ -675,7 +675,7 @@ namespace IdManagement.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
-                _logger.LogError("~/Manage/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not retrieve id:{0}'s account information", id);
+                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not retrieve id:{0}'s account information", id);
                 throw new InvalidOperationException($"Unable to load user information.");
             }
 
@@ -698,14 +698,14 @@ namespace IdManagement.Controllers
             var TwoFactorResult = await _userManager.SetTwoFactorEnabledAsync(user, true);
             if (!TwoFactorResult.Succeeded)
             {
-                _logger.LogError("~/Manage/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not set 2fa for id:{0}'s account.", id);
+                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not set 2fa for id:{0}'s account.", id);
                 throw new InvalidOperationException($"An error occurred setting 2FA for your account.");
             }
 
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             if (!recoveryCodes.Any())
             {
-                _logger.LogError("~/Manage/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not generate 2fa recovery codes for id:{0}'s account.", id);
+                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not generate 2fa recovery codes for id:{0}'s account.", id);
                 throw new InvalidOperationException("An error occurred setting 2FA for your account.");
             }
 
@@ -741,23 +741,23 @@ namespace IdManagement.Controllers
                 var user = await _userManager.FindByIdAsync(id);
                 if (user == null)
                 {
-                    _logger.LogError("~/Manage/ShowCodes - userManager could not retrieve id:{0}'s account information", id);
+                    _logger.LogError("~/Account/ShowCodes - userManager could not retrieve id:{0}'s account information", id);
                     throw new ApplicationException($"Unable to load account information.");
                 }
 
                 var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
                 if (!disable2faResult.Succeeded)
                 {
-                    _logger.LogError("~/Manager/ShowCodes - an error occurred disabling 2fa for user id:{0}.", id);
+                    _logger.LogError("~/Account/ShowCodes - an error occurred disabling 2fa for user id:{0}.", id);
                 }
 
                 var resetResult = await _userManager.ResetAuthenticatorKeyAsync(user);
                 if (!resetResult.Succeeded)
                 {
-                    _logger.LogError("~/Manage/ShowCodes - An error occurred: userManger couldn't ResetAuthenticatorKeyAsync");
+                    _logger.LogError("~/AccountShowCodes - An error occurred: userManger couldn't ResetAuthenticatorKeyAsync");
                 }
 
-                _logger.LogError("~/Manage/ShowCodes - An error occurred displaying Auth recovery codes to user id:{0}", id);
+                _logger.LogError("~/Account/ShowCodes - An error occurred displaying Auth recovery codes to user id:{0}", id);
                 throw new ApplicationException("An error occurred showing 2FA Authentication Codes. Please try setting up 2FA again.");
             }
 
