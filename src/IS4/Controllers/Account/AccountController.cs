@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -125,7 +127,10 @@ namespace IS4.Controllers
                 {
                     //user logged in with username
                     var user = await _userManager.FindByEmailAsync(model.Username);
-                    loginCredentials = user.UserName;
+                    if(user != null)
+                    {
+                        loginCredentials = user.UserName;
+                    }
                 }
                 else
                 {
@@ -173,7 +178,7 @@ namespace IS4.Controllers
                     else
                     {
                         // user might have clicked on a malicious link - should be logged
-                        throw new Exception("invalid return URL");
+                        throw new Exception("Invalid return URL");
                     }
                 }
                 /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
@@ -192,7 +197,7 @@ namespace IS4.Controllers
                 /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
 
                 /******************START: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
-                await _events.RaiseAsync(new UserLoginFailureEvent(loginCredentials, "invalid credentials", clientId: context?.Client.ClientId));
+                await _events.RaiseAsync(new UserLoginFailureEvent(loginCredentials, "Invalid Credentials", clientId: context?.Client.ClientId));
                 //await _events.RaiseAsync(new UserLoginFailureEvent(model.Username, "invalid credentials", clientId: context?.Client.ClientId));
                 /******************END: NOT PART OF IS4 QUICKSTART - CODE I ADDED *********************/
 

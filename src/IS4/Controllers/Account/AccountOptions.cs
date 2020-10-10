@@ -15,6 +15,6 @@ namespace IS4.Controllers
         public static bool ShowLogoutPrompt = false;
         public static bool AutomaticRedirectAfterSignOut = true;
 
-        public static string InvalidCredentialsErrorMessage = "Invalid username, email or password";
+        public static string InvalidCredentialsErrorMessage = "Invalid Username, Email or Password";
     }
 }
