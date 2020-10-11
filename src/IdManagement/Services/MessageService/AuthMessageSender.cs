@@ -1,7 +1,12 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using MimeKit;
+using Serilog.Core;
+using System;
+using System.Net.Mail;
 using System.Threading.Tasks;
 using Twilio;
+using Twilio.Exceptions;
 using Twilio.Rest.Api.V2010.Account;
 using Twilio.Types;
 
@@ -23,8 +28,11 @@ namespace IdManagement.Services.MessageService
         private string _SMSAccountFrom;
         private string _SMSAuthToken;
 
-        public AuthMessageSender(IConfiguration configuration)
+        private ILogger<AuthMessageSender> _logger;
+        public AuthMessageSender(IConfiguration configuration, ILogger<AuthMessageSender> logger)
         {
+            _logger = logger;
+
             //Email
             _smtpServer = configuration["Email:SmtpServer"];
             _smtpPort = int.Parse(configuration["Email:SmtpPort"]);
@@ -58,14 +66,23 @@ namespace IdManagement.Services.MessageService
 
             using (var client = new MailKit.Net.Smtp.SmtpClient())
             {
-                client.Connect(_smtpServer, _smtpPort, _enableSsl);
-
-                //If using GMail this requires turning on LessSecureApps : https://myaccount.google.com/lesssecureapps
-                client.Authenticate(_username, _password);
-
-                await client.SendAsync(mimeMessage);
-
-                client.Disconnect(true);
+                try
+                {
+                    client.Connect(_smtpServer, _smtpPort, _enableSsl);
+                    //If using GMail this requires turning on LessSecureApps : https://myaccount.google.com/lesssecureapps
+                    client.Authenticate(_username, _password);
+                    await client.SendAsync(mimeMessage);
+                    _logger.LogInformation("A email was sent to {0}. Message sent: {1}", email, mimeMessage.Body);
+                }
+                catch (SmtpException ex)
+                {
+                    _logger.LogError("An error occurred sending a confimation email: {0}, Message:{1}", ex, ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    client.Disconnect(true);
+                }              
             }
             return await Task.FromResult(0);
         }
@@ -85,25 +102,46 @@ namespace IdManagement.Services.MessageService
 
             using (var client = new MailKit.Net.Smtp.SmtpClient())
             {
-                client.Connect(_smtpServer, _smtpPort, _enableSsl);
+                try
+                {
+                    client.Connect(_smtpServer, _smtpPort, _enableSsl);
 
-                client.Authenticate(_username, _password); 
+                    client.Authenticate(_username, _password);
 
-                await client.SendAsync(mimeMessage);
-
-                client.Disconnect(true);
+                    await client.SendAsync(mimeMessage);
+                    _logger.LogInformation("A confirmation email was sent to {0}. Message sent: {1}", email, mimeMessage.Body);
+                }
+                catch (SmtpException ex)
+                {
+                    _logger.LogError("An error occurred sending a confimation email: {0}, Message:{1}", ex, ex.Message);
+                    throw;
+                }
+                finally
+                {
+                    client.Disconnect(true);
+                }
             }
             return await Task.FromResult(0);
         }
 
         public Task SendSmsAsync(string number, string message)
         {
-            TwilioClient.Init(_SMSAccountId, _SMSAuthToken);
+            try
+            {
+                TwilioClient.Init(_SMSAccountId, _SMSAuthToken);
 
-            return MessageResource.CreateAsync(
-              to: new PhoneNumber(number),
-              from: new PhoneNumber(_SMSAccountFrom),
-              body: message);
+                _logger.LogInformation("An Sms Message was sent to {0}, Message:{1}", number, message);
+
+                return MessageResource.CreateAsync(
+                  to: new PhoneNumber(number),
+                  from: new PhoneNumber(_SMSAccountFrom),
+                  body: message);
+            }
+            catch (TwilioException ex)
+            {
+                _logger.LogError("An error occurred sending a text message Exception: {0}, Message: {1}", ex, ex.Message);
+                throw;
+            }
         }
     }
 }

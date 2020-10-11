@@ -5,10 +5,11 @@
 }
 
 <h1>@ViewData["Title"].</h1>
-
+<p class="text-danger">@TempData["ErrorMessage"]</p>
 <form asp-controller="Account" asp-action="VerifyPhoneNumber" method="post" class="form-horizontal" role="form">
     <input asp-for="PhoneNumber" type="hidden" value="@TempData["PhoneNumber"]"/>
-    <h4>Add a phone number.</h4>
+    <h4>Verify your phone number.</h4>
+    <p>You should receive a text message containing a verification code.</p>
     <hr />
     <div asp-validation-summary="All" class="text-danger"></div>
     <div class="form-group">

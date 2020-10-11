@@ -1,4 +1,5 @@
 ﻿using IdentityCommon;
+using IdentityCommon.V1.DTO;
 using IdManagement.Models.AccountViewModels;
 using IdManagement.Services.MessageService;
 using Microsoft.AspNetCore.Authentication;
@@ -9,8 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Json;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
@@ -18,6 +22,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using Twilio.Rest.Trunking.V1;
 
 namespace IdManagement.Controllers
 {
@@ -114,6 +119,7 @@ namespace IdManagement.Controllers
             try
             {
                 await HttpContext.SignOutAsync("Cookies");
+                await HttpContext.SignOutAsync("oidc");
             }
             catch (Exception ex)
             {
@@ -143,6 +149,7 @@ namespace IdManagement.Controllers
             {
                 try
                 {
+                    await HttpContext.SignOutAsync("Cookies");
                     await HttpContext.SignOutAsync("oidc");
                 }
                 catch (Exception ex)
@@ -175,24 +182,63 @@ namespace IdManagement.Controllers
                 return View(model);
             }
 
-            var user = new ApplicationUser { UserName = model.UserName, Email = model.Email };
+            using HttpClient client = _httpClientFactory.CreateClient(_configuration["ApplicationIds:IdManagementId"]);
 
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
+            /******************** Not sure I like this implementation ********************/
+            string userName;
+            try
             {
-                _logger.LogError("~/Account/Register(RegisterViewModel) - userManager could not create a new user.");
-                throw new InvalidOperationException("An error occurred creating a user account.");
+                userName = await client.GetStringAsync($"https://localhost:6001/api/v1/Account/ValidUserNameAsync?userName={model.UserName}");
+                if (userName == "false")
+                {
+                    ModelState.AddModelError("Error", $"UserName {model.UserName} has been taken.");
+                    return View(model);
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError("~/Account/Register(RegisterViewModel, returnUrl) - An error occurred communicating with IdApi. Error:{0}, Error Message{1}", ex, ex.Message);
+                throw;
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            if (String.IsNullOrWhiteSpace(code))
+            string email;
+            try
             {
-                _logger.LogError("~/Account/Register(RegisterViewModel) - userManager could not generate an email confirmation token.");
-                throw new InvalidOperationException("An error occurred creating an email confirmation link.");
+                email = await client.GetStringAsync($"https://localhost:6001/api/v1/Account/ValidUserEmailAsync?email={model.Email}");
+                if (email == "false")
+                {
+                    ModelState.AddModelError("Error", $"Email {model.Email} has been taken.");
+                    return View(model);
+                }
+            }
+            catch(HttpRequestException ex)
+            {
+                _logger.LogError("~/Account/Register(RegisterViewModel, returnUrl) - An error occurred communicating with IdApi. Error:{0}, Error Message{1}", ex, ex.Message);
+                throw;
+            }
+            /******************** Not sure I like this implementation ********************/
+
+            RegisterAccount registerAccount = new RegisterAccount
+            {
+                UserName = model.UserName,
+                Email = model.Email,
+                Password = model.Password
+            };
+            string asJson = JsonSerializer.Serialize<RegisterAccount>(registerAccount);
+            var content = new StringContent(asJson, Encoding.UTF8, "application/json");
+
+            var response = await client.PostAsync("/api/v1/Account/RegisterAccountAsync", content);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("~/Account/Register(RegisterViewModel) - PostAsync could not complete request.");
+                throw new ApplicationException();
             }
 
-            var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
+            string responseContent = await response.Content.ReadAsStringAsync();
+            RegisterAccountResponse registerResponse = JsonSerializer.Deserialize<RegisterAccountResponse>(responseContent);
+            response.EnsureSuccessStatusCode();
 
+            var callbackUrl = Url.EmailConfirmationLink(registerResponse.Id, registerResponse.UrlEncodedVerificationCode, Request.Scheme);
             try
             {
                 await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
@@ -213,7 +259,7 @@ namespace IdManagement.Controllers
         public IActionResult HasRegistered()
         {
             TempData["HasRegistered"] = "You have registered for an account and an email has been sent to the email address provided when you registered." +
-                "\nPlease check your email in box and click the link to complete the registration process. After which, you can log in with your new account.";
+                "\nPlease check your email in box / junk box and click the link to complete the registration process. After which, you can log in with your new account.";
             return View();
         }
 
@@ -226,59 +272,47 @@ namespace IdManagement.Controllers
                 return RedirectToAction(nameof(AccessDenied));
             }
 
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/ConfirmEmail(string, string) - userManager could not find user by id. Confirmation email link generation must not be configured correctly.");
-                throw new ApplicationException("Unable to load user account information.");
-            }
-
-            var result = await _userManager.ConfirmEmailAsync(user, code);
-            if (!result.Succeeded)
-            {
-                _logger.LogError("~/Account/ConfirmEmail(string, string) - userManager could not confirm email.");
-                throw new ApplicationException("An error occurred confirming your email address.");
-            }
+            using HttpClient client = _httpClientFactory.CreateClient(_configuration["ApplicationIds:IdManagementId"]);
+            HttpResponseMessage response = await client.GetAsync($"https://localhost:6001/api/v1/Account/ConfirmEmailAsync?userId={userId}&code={code}");
+            
+            response.EnsureSuccessStatusCode();
+            
+            _logger.LogInformation("~/Account/ConfirmEmail - A new User has successfully confirmed thier email. User Id{0}", userId);
 
             return View();
         }
         #endregion
 
-
-
-
-
-
-        #region Display Logged In User's current account options/settings
+        #region Display Logged In User's current account settings
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            var accessToken = await GetAccessToken();
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
             var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
+            if(id == null)
             {
-                _logger.LogError("~/Account/Index - userManger unable to retieve {0}'s account information", id);
-                throw new ApplicationException($"Unable to load user data.");
+                _logger.LogError("~/Account/Index - A User that was not logged in, somehow navigated to Account Manage page. HttpContext:{0}", HttpContext);
+                return Forbid();
             }
 
-            var model = new IndexViewModel
+            HttpResponseMessage response = await client.GetAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/GetUserAccount?id={id}");
+            if (!response.IsSuccessStatusCode)
             {
-                Username = user.UserName,
-                Email = user.Email,
-                TwoFactor = user.TwoFactorEnabled,
-                PhoneNumber = user.PhoneNumber,
-                IsEmailConfirmed = user.EmailConfirmed,
-            };
+                _logger.LogError("~/Account/Index - Bad http response code");
+                throw new ApplicationException("There was an error retrieving the User Account information.");
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            IndexViewModel model = JsonSerializer.Deserialize<IndexViewModel>(content);
+            response.EnsureSuccessStatusCode();
 
             return View(model);
         }
         #endregion
-
-
-
-
-
-
 
         #region Add/Remove Phone Number
         [HttpGet]
@@ -291,38 +325,45 @@ namespace IdManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PhoneNumber(AddPhoneNumberViewModel model)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+
+            string id = User?.FindFirstValue("sub");
+
+            if (String.IsNullOrWhiteSpace(id))
             {
-                ModelState.AddModelError(string.Empty, "A phone number needs to be entered.");
-                return View(model);
+                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - Unable to retrieve User ID from HttpContext User Principle. A User needs to be logged in in order to hit this endpoint.");
+                throw new InvalidOperationException();
             }
 
-            var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
+            model.Id = id;
+            string accessToken = await GetAccessToken();
+
+            string content = JsonSerializer.Serialize<AddPhoneNumberViewModel>(model);
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+         
+            StringContent requestContent = new StringContent(content, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/AddPhoneNumberAsync") { Content = requestContent };
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+            
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - userManager unable to retrieve {0}'s information.");
-                throw new InvalidOperationException("An error occurred retieving your account information.");
+                string badResponse = await response.Content.ReadAsStringAsync();
+                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - Error from IdApi - {0}", badResponse);
+                TempData["ErrorMessage"] = "An Error has occurred attempting to save the phone number to your account.";
+                return RedirectToAction(nameof(Index));
             }
 
-            var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, model.PhoneNumber);
-            if (code == null)
-            {
-                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - userManager was not able to generate verification code.");
-                throw new InvalidOperationException("An error occurred generating the verification code.");
-            }
+            string phoneVerificationCode = await response.Content.ReadAsStringAsync();
+            AddPhoneNumberViewModel phoneVerificationCodeObj = JsonSerializer.Deserialize<AddPhoneNumberViewModel>(phoneVerificationCode);
+            response.EnsureSuccessStatusCode();
 
-            try
-            {
-                await _smsSender.SendSmsAsync(model.PhoneNumber, "Your phone verification security code is: " + code);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError("~/Account/PhoneNumber(AddPhoneNumberViewModel) - An error occurred sending sms verification code. {0}", ex);
-                throw;
-            }
-
-            TempData["PhoneNumber"] = model.PhoneNumber;
+            await _smsSender.SendSmsAsync(phoneVerificationCodeObj.PhoneNumber, "Your phone verification security code is: " + phoneVerificationCodeObj.Code);
+            TempData["PhoneNumber"] = phoneVerificationCodeObj.PhoneNumber;
+                
             return RedirectToAction(nameof(VerifyPhoneNumber));
         }
 
@@ -343,20 +384,35 @@ namespace IdManagement.Controllers
             }
 
             var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/VerifyPhoneNumber(VerifyPhoneNumberViewModel) - userManager unable to retrieve {0}'s information.");
-                throw new InvalidOperationException("An error occurred retieving your account information.");
-            }
+            
+            //Store phone number to re-display page if incorrect validation code was entered.
+            TempData["phoneNumber"] = model.PhoneNumber;
 
-            var result = await _userManager.ChangePhoneNumberAsync(user, model.PhoneNumber, model.Code);
-            if (!result.Succeeded)
-            {
-                _logger.LogError("~/Account/VerifyPhoneNumber(VerifyPhoneNumberViewModel) - userManager unable to change phone number for {0}'s account.");
-                throw new InvalidOperationException("An error occurred changing the phone number listed on your account.");
-            }
+            model.Id = id;
+            string accessToken = await GetAccessToken();
 
+            string content = JsonSerializer.Serialize<VerifyPhoneNumberViewModel>(model);
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            StringContent requestContent = new StringContent(content, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/VerifyPhoneNumberAsync") { Content = requestContent };
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string badResponse = await response.Content.ReadAsStringAsync();
+                _logger.LogError("~/Account/VerifyPhoneNumber(AddPhoneNumberViewModel) - Error from IdApi - {0}", badResponse);
+                TempData["ErrorMessage"] = badResponse;
+                model.PhoneNumber = TempData["phoneNumber"].ToString();
+                return View(model);
+            }
+            response.EnsureSuccessStatusCode();
+
+            TempData.Remove("phoneNumber");
             TempData["StatusMessage"] = "You have successfully verified your phone number";
             return RedirectToAction(nameof(Index));
         }
@@ -366,19 +422,24 @@ namespace IdManagement.Controllers
         public async Task<IActionResult> RemovePhoneNumber()
         {
             var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/RemovePhoneNumber - userManager unable to retrieve id:{0}'s account information.", id);
-                throw new ApplicationException($"Unable to load user information.");
-            }
 
-            var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, null);
-            if (!setPhoneResult.Succeeded)
+            string accessToken = await GetAccessToken();
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/RemovePhoneNumberAsync?id={id}");
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("~/Account/RemovePhoneNumber - and error occured removing a phone number from id:{0}'s account information.", id);
-                throw new ApplicationException($"Unexpected error occurred removing the phone number.");
+                string badResponse = await response.Content.ReadAsStringAsync();
+                _logger.LogError("~/Account/RemovePhoneNumber(id) - Error from IdApi - {0}", badResponse);
+                TempData["ErrorMessage"] = "An error occurred while removing the phone number from your account.";
+                return RedirectToAction(nameof(Index));
             }
+            response.EnsureSuccessStatusCode();
 
             TempData["StatusMessage"] = "The phone number has been removed from your account.";
             return RedirectToAction(nameof(Index));
@@ -386,7 +447,7 @@ namespace IdManagement.Controllers
         #endregion
 
 
-
+        /****************************  ABOVE ACTIONS - DB ACCESS MOVED TO IdApi *******************************/ 
 
         #region When user is already logged in and wants to change password 
         /****************** START When user is already logged in and wants to change password **********************/
@@ -816,11 +877,22 @@ namespace IdManagement.Controllers
             model.SharedKey = FormatKey(unformattedKey);
             model.AuthenticatorUri = GenerateQrCodeUri(user.Email, unformattedKey);
         }
+
+        /// <summary>
+        /// Get User's access_token
+        /// </summary>
+        private async Task<string> GetAccessToken()
+        {
+            string accessToken = await HttpContext.GetTokenAsync("access_token");
+            if (String.IsNullOrEmpty(accessToken))
+            {
+                _logger.LogError("~/Account/GetAccessToken - Access token could not be retieved.");
+                throw new NullReferenceException("No Access Token found");
+            }
+
+            return accessToken;
+        }
         #endregion
-
-
-
-
 
         [HttpGet]
         [AllowAnonymous]

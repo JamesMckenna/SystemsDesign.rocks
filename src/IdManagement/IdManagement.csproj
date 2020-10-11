@@ -36,6 +36,8 @@
     <PackageReference Include="Serilog.Filters.Expressions" Version="2.1.0" />
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.4.0" />
+    <PackageReference Include="System.Json" Version="4.7.1" />
+    <PackageReference Include="System.Net.Http.Json" Version="3.2.1" />
     <PackageReference Include="System.Text.Json" Version="4.7.2" />
     <PackageReference Include="Twilio" Version="5.47.2" />
   </ItemGroup>

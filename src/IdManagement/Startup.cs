@@ -70,6 +70,8 @@ namespace IdManagement
             services.AddControllersWithViews(AppMvcOptions.MVCControllerOptions);
 
             services.AddHttpContextAccessor();
+            services.AddHttpClient();
+            services.AddHttpClient("IdApiManage");
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdMangementConnectionStrings:IdManagementDbConnection"]));
 
@@ -77,8 +79,6 @@ namespace IdManagement
                .AddEntityFrameworkStores<ApplicationDbContext>()
                .AddSignInManager()
                .AddDefaultTokenProviders(); //Needed to generate tokens for password reset, change email, change phone number 2Fa
-
-            services.AddHttpClient();
 
             #region Health Checks
             services.AddHealthChecks()

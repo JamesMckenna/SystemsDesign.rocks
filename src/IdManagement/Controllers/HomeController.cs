@@ -22,7 +22,6 @@ namespace IdManagement.Controllers
 
         public IActionResult Privacy(string param)
         {
-            //return BadRequest();
             return View("Privacy");
         }
 

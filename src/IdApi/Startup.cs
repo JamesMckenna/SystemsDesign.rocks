@@ -1,3 +1,4 @@
+using IdApi.Services.ErrorHelpers;
 using IdentityCommon;
 using IdentityDataCommon;
 using IdentityServer4.AccessTokenValidation;
@@ -6,13 +7,15 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
+using System.Net.Mime;
 
 namespace IdApi
 {
@@ -70,12 +73,28 @@ namespace IdApi
                 });
             });
 
-            services.AddControllers();
+            services.AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+            {
+
+                options.SuppressModelStateInvalidFilter = true;
+                options.SuppressInferBindingSourcesForParameters = true;
+
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var result = new BadRequestObjectResult(context.ModelState);
+                    result.ContentTypes.Add(MediaTypeNames.Application.Json);
+                    return result;
+                };
+
+            });
+
             services.AddMvcCore(options =>
             {
                 //lock down this Api to only allow access tokens with IdApi scope
                 var policy = ScopePolicy.Create("IdApi");
                 options.Filters.Add(new AuthorizeFilter(policy));
+                options.Filters.Add(typeof(ApiValidationFilterAttribute));
             })
             //https://stackoverflow.com/questions/55666826/where-did-imvcbuilder-addjsonoptions-go-in-net-core-3-0
             .AddJsonOptions(options =>
@@ -116,16 +135,29 @@ namespace IdApi
                 //options.DiscoveryDocumentRefreshInterval = TimeSpan.FromSeconds(100);
                 options.SupportedTokens = SupportedTokens.Both;
             });
+
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "IdApi", Version = "v1" });
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //}
+            app.UseMiddleware<AppErrorMiddleware>();
 
-            
+            app.UseSwagger(context => {
+                context.RouteTemplate = Configuration["SwaggerOptions:JsonRoute"];
+            });
+            app.UseSwaggerUI(context => {
+                string swaggerJsonBasePath = string.IsNullOrWhiteSpace(context.RoutePrefix) ? "." : "..";
+                context.SwaggerEndpoint("./" + Configuration["SwaggerOptions:UIEndpoint"], Configuration["SwaggerOptions:Description"]);
+            });
+
             app.UseHttpsRedirection();
 
             app.UseRouting();

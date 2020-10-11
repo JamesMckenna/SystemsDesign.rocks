@@ -11,5 +11,7 @@ namespace IdManagement.Models.AccountViewModels
         [Phone]
         [Display(Name = "Phone number")]
         public string PhoneNumber { get; set; }
+
+        public string Id { get; set; }
     }
 }
