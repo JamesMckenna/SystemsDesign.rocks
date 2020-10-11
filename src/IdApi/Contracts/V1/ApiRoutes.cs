@@ -18,6 +18,10 @@
             internal const string AddPhoneNumberAsync = Base + "/Account/AddPhoneNumberAsync";
             internal const string VerifyPhoneNumberAsync = Base + "/Account/VerifyPhoneNumberAsync";
             internal const string RemovePhoneNumberAsync = Base + "/Account/RemovePhoneNumberAsync";
+
+            internal const string ChangePasswordAsync = Base + "/Account/ChangePasswordAsync";
+            //internal const string PasswordChangedAsync = Base + "/Account/PasswordChangedAsync";
+
         }
     }
 }

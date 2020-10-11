@@ -446,29 +446,12 @@ namespace IdManagement.Controllers
         }
         #endregion
 
-
-        /****************************  ABOVE ACTIONS - DB ACCESS MOVED TO IdApi *******************************/ 
-
         #region When user is already logged in and wants to change password 
         /****************** START When user is already logged in and wants to change password **********************/
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> ChangePassword()
+        public IActionResult ChangePassword()
         {
-            var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/ChangePassword - userManager unable to retrieve id:{0}'s account information.", id);
-                throw new ApplicationException($"Unable to load account information.");
-            }
-
-            var hasPassword = await _userManager.HasPasswordAsync(user);
-            if (!hasPassword)
-            {
-                _logger.LogError("~/Account/ChangePassword - userManager unable to retrieve id:{0}'s password.", id);
-                throw new ApplicationException($"Unable to load account information.");
-            }
             return View();
         }
 
@@ -481,20 +464,33 @@ namespace IdManagement.Controllers
                 return View(model);
             }
 
-            var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/ChangePassword(ChanagePasswordViewModel) - userManager unable to retrieve id:{0}'s account information.", id);
-                throw new InvalidOperationException($"Unable to load user account information.");
-            }
+            string id = User?.FindFirstValue("sub");
 
-            var changePasswordResult = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-            if (!changePasswordResult.Succeeded)
+            ChangePassword passwordChanged = new ChangePassword
             {
-                _logger.LogError("~/Account/ChangePassword(ChanagePasswordViewModel) - userManager unable to change password for id:{0}'s account.", id);
-                throw new InvalidOperationException($"An error occurred changing the password for account.");
+                Id = id,
+                OldPassword = model.OldPassword,
+                NewPassword = model.NewPassword,
+            };
+
+            string asJson = JsonSerializer.Serialize<ChangePassword>(passwordChanged);
+            StringContent content = new StringContent(asJson, Encoding.UTF8, "application/json");
+
+            string accessToken = await GetAccessToken();
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            using HttpResponseMessage response = await client.PostAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ChangePasswordAsync",content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string badResponse = await response.Content.ReadAsStringAsync();
+                _logger.LogError("~/Account/ChangePasswordAsync - Error from IdApi - {0}", badResponse);
+                TempData["ErrorMessage"] = "An error occurred while changing the password for your account.";
+                return RedirectToAction(nameof(Index));
             }
+            response.EnsureSuccessStatusCode();
 
             _logger.LogInformation("User id:{0} has changed their password successfully.", id);
             return RedirectToAction(nameof(PasswordChanged));
@@ -514,15 +510,16 @@ namespace IdManagement.Controllers
             string toEncode = $"id_token_hint={idToken}&post_logout_redirect_uri=" + _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/PasswordChanged";
             string encoded = HttpUtility.UrlEncode(toEncode);
 
-            HttpClient client = _httpClientFactory.CreateClient();
+            using HttpClient client = _httpClientFactory.CreateClient();
             client.BaseAddress = new Uri(_configuration["AppURLS:IS4BaseUrl"]);
             try
             {
-                await client.GetAsync("/connect/endsession?" + encoded);
+                HttpResponseMessage response = await client.GetAsync("/connect/endsession?" + encoded);
+                response.EnsureSuccessStatusCode();
             }
-            catch (UriFormatException ex)
+            catch (ArgumentNullException ex)
             {
-                _logger.LogError("~/Account/PasswordChanged() - Query string encoding error occurred. {0}", ex);
+                _logger.LogError("~/Account/PasswordChanged() - Argument Null Exception, an error occurred hitting the /connect/endsession endpoint of IS4. Error:{0}, Message:{1}", ex, ex.Message);
                 throw;
             }
             catch (HttpRequestException ex)
@@ -539,7 +536,7 @@ namespace IdManagement.Controllers
         #endregion
 
 
-
+        /****************************  ABOVE ACTIONS - DB ACCESS MOVED TO IdApi *******************************/
 
 
 

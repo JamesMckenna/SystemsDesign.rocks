@@ -275,13 +275,46 @@ namespace IdApi.Controllers.V1
         }
         #endregion
 
+        #region Logged in User Change Password 
+        [HttpPost(ApiRoutes.AccountRoutes.ChangePasswordAsync)]
+        public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePassword model)
+        {
 
+            ApplicationUser user;
+            try
+            {
+                user = await _userManager.FindByIdAsync(model.Id);
+                if (user == null)
+                {
+                    _logger.LogError("~/Account/ChangePasswordAsync(ChanagePassword) - userManager unable to retrieve id:{0}'s account information.", model.Id);
+                    return Unauthorized();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("UserManger encountered and error connecting to the database. {0}", ex);
+                return StatusCode(503, "Error connecting to the database.");
+            }
 
+            IdentityResult result;
+            try
+            {
+                result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("~/Account/ChangePasswordAsync(ChanagePassword) - userManager unable to change password for id:{0}'s account.", model.Id);
+                    return StatusCode(500,$"An error occurred changing the password for account.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("UserManger encountered and error connecting to the database. {0}", ex);
+                return StatusCode(503, "Error connecting to the database.");
+            }
 
-
-
-
-
+            return Ok();
+        }
+        #endregion
 
 
 
