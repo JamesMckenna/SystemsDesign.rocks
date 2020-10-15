@@ -8,7 +8,6 @@
 
         internal static class AccountRoutes
         {
-            internal const string Index = Base + "/Account";
             internal const string GetUserAccountAsync = Base + "/Account/{id}";
             internal const string RegisterAccountAsync = Base + "/Account/RegisterAccountAsync";
             internal const string ValidUserNameAsync = Base + "/Account/ValidUserNameAsync";
@@ -20,8 +19,13 @@
             internal const string RemovePhoneNumberAsync = Base + "/Account/RemovePhoneNumberAsync";
 
             internal const string ChangePasswordAsync = Base + "/Account/ChangePasswordAsync";
-            //internal const string PasswordChangedAsync = Base + "/Account/PasswordChangedAsync";
 
+            internal const string ForgotPasswordAsync = Base + "/Account/ForgotPasswordAsync";
+            internal const string ResetPasswordAsync = Base + "/Account/ResetPasswordAsync";
+
+            internal const string Disable2faAsync = Base + "/Account/Disable2faAsync";
+            internal const string EnableAuthenticatorAsync = Base + "/Account/EnableAuthenticatorAsync";
+            internal const string LoadSharedKeyAndQrCodeUriAsync = Base + "/Account/LoadSharedKeyAndQrCodeUriAsync";
         }
     }
 }

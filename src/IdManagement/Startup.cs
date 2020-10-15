@@ -71,7 +71,7 @@ namespace IdManagement
 
             services.AddHttpContextAccessor();
             services.AddHttpClient();
-            services.AddHttpClient("IdApiManage");
+            services.AddHttpClient("IdApiAccount");
 
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdMangementConnectionStrings:IdManagementDbConnection"]));
 

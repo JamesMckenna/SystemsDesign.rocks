@@ -61,7 +61,9 @@ namespace IdManagement.Controllers
                     emoji = "&#128563";
                     break;
                 case 403:
-                    //App will redirect to /Access/Denied
+                    title = "Forbidden";
+                    details = "Sorry, but our helper Elves are not allowed to proceed with that operation.";
+                    emoji = "&#128563";
                     break;
                 case 404:
                     title = "Not Found";

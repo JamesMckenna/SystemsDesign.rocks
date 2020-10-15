@@ -1,0 +1,12 @@
+﻿
+FOR: IdentityCommon Library & IdentityDataCommon Library
+
+
+User Account: UserManager - complete
+RoleManager - TODO
+Admin Management: UserManager - TODO
+SigninManager - currently IS4, consider moving to IdApi
+
+
+Might not need this class library. Attempt to move ALL Identity related classes to IdApi
+IF this/these Apps (IS4, IdManagement, IdApi) continue to use this library, then remove duplicate classes. EG: This class library contains a ChangePassword.cs, as does IdManagement.Models

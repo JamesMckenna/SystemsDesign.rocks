@@ -1,28 +1,21 @@
-﻿using IdentityCommon;
-using IdentityCommon.V1.DTO;
+﻿using IdManagement.Models;
 using IdManagement.Models.AccountViewModels;
 using IdManagement.Services.MessageService;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Json;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Net.Mail;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
-using Twilio.Rest.Trunking.V1;
 
 namespace IdManagement.Controllers
 {
@@ -30,34 +23,28 @@ namespace IdManagement.Controllers
     [Route("[controller]/[action]")]
     public class AccountController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AccountController> _logger;
         private IConfiguration _configuration;
         private readonly ISmsSender _smsSender;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly UrlEncoder _urlEncoder;
-        private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
-        private const string RecoveryCodesKey = nameof(RecoveryCodesKey);
 
         public AccountController(
-            UserManager<ApplicationUser> userManager,
             IEmailSender emailSender,
             ILogger<AccountController> logger,
             IConfiguration configuration,
             ISmsSender smsSender,
-            IHttpClientFactory httpClientFactory,
-            UrlEncoder urlEncoder
-            )
+            IHttpClientFactory httpClientFactory)
         {
-            _userManager = userManager;
             _emailSender = emailSender;
             _logger = logger;
             _configuration = configuration;
             _smsSender = smsSender;
             _httpClientFactory = httpClientFactory;
-            _urlEncoder = urlEncoder;
         }
+
+
+
 
         #region All Login and Logout is redirected to and handled by IS4
         /// <summary>
@@ -161,6 +148,9 @@ namespace IdManagement.Controllers
         }
         #endregion
 
+
+
+
         #region Register new user
         [HttpGet]
         [AllowAnonymous]
@@ -188,8 +178,8 @@ namespace IdManagement.Controllers
             string userName;
             try
             {
-                userName = await client.GetStringAsync($"https://localhost:6001/api/v1/Account/ValidUserNameAsync?userName={model.UserName}");
-                if (userName == "false")
+                userName = await client.GetStringAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ValidUserNameAsync?userName={model.UserName}");
+                if (userName == "true")
                 {
                     ModelState.AddModelError("Error", $"UserName {model.UserName} has been taken.");
                     return View(model);
@@ -198,14 +188,14 @@ namespace IdManagement.Controllers
             catch (HttpRequestException ex)
             {
                 _logger.LogError("~/Account/Register(RegisterViewModel, returnUrl) - An error occurred communicating with IdApi. Error:{0}, Error Message{1}", ex, ex.Message);
-                throw;
+                throw;//Do I have to throw? Can I not just log the error and then pass a User friendly message to the view?
             }
 
             string email;
             try
             {
-                email = await client.GetStringAsync($"https://localhost:6001/api/v1/Account/ValidUserEmailAsync?email={model.Email}");
-                if (email == "false")
+                email = await client.GetStringAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ValidUserEmailAsync?email={model.Email}");
+                if (email == "true")
                 {
                     ModelState.AddModelError("Error", $"Email {model.Email} has been taken.");
                     return View(model);
@@ -235,7 +225,7 @@ namespace IdManagement.Controllers
             }
 
             string responseContent = await response.Content.ReadAsStringAsync();
-            RegisterAccountResponse registerResponse = JsonSerializer.Deserialize<RegisterAccountResponse>(responseContent);
+            RegisterAccount registerResponse = JsonSerializer.Deserialize<RegisterAccount>(responseContent);
             response.EnsureSuccessStatusCode();
 
             var callbackUrl = Url.EmailConfirmationLink(registerResponse.Id, registerResponse.UrlEncodedVerificationCode, Request.Scheme);
@@ -283,26 +273,30 @@ namespace IdManagement.Controllers
         }
         #endregion
 
+
+
+
         #region Display Logged In User's current account settings
         [HttpGet]
         public async Task<IActionResult> Index()
         {
             var accessToken = await GetAccessToken();
 
-            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             var id = User?.FindFirstValue("sub");
             if(id == null)
             {
-                _logger.LogError("~/Account/Index - A User that was not logged in, somehow navigated to Account Manage page. HttpContext:{0}", HttpContext);
+                _logger.LogError("~/Account/Index A User that was not logged in, somehow navigated to Account Manage page. HttpContext:{0}", HttpContext);
                 return Forbid();
             }
 
             HttpResponseMessage response = await client.GetAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/GetUserAccount?id={id}");
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("~/Account/Index - Bad http response code");
+                string badResponse = await response.Content.ReadAsStringAsync();
+                _logger.LogError("~/Account/Index - Error from IdApi - Bad Response Content:{0}", badResponse);
                 throw new ApplicationException("There was an error retrieving the User Account information.");
             }
 
@@ -313,6 +307,10 @@ namespace IdManagement.Controllers
             return View(model);
         }
         #endregion
+
+
+
+
 
         #region Add/Remove Phone Number
         [HttpGet]
@@ -340,7 +338,7 @@ namespace IdManagement.Controllers
 
             string content = JsonSerializer.Serialize<AddPhoneNumberViewModel>(model);
 
-            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
          
             StringContent requestContent = new StringContent(content, Encoding.UTF8, "application/json");
@@ -393,7 +391,7 @@ namespace IdManagement.Controllers
 
             string content = JsonSerializer.Serialize<VerifyPhoneNumberViewModel>(model);
 
-            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             StringContent requestContent = new StringContent(content, Encoding.UTF8, "application/json");
@@ -425,10 +423,10 @@ namespace IdManagement.Controllers
 
             string accessToken = await GetAccessToken();
 
-            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/RemovePhoneNumberAsync?id={id}");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/RemovePhoneNumberAsync?id={id}");
 
             using HttpResponseMessage response = await client.SendAsync(request);
 
@@ -445,6 +443,9 @@ namespace IdManagement.Controllers
             return RedirectToAction(nameof(Index));
         }
         #endregion
+
+
+
 
         #region When user is already logged in and wants to change password 
         /****************** START When user is already logged in and wants to change password **********************/
@@ -478,7 +479,7 @@ namespace IdManagement.Controllers
 
             string accessToken = await GetAccessToken();
 
-            HttpClient client = _httpClientFactory.CreateClient("IdApiManage");
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
             using HttpResponseMessage response = await client.PostAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ChangePasswordAsync",content);
@@ -536,9 +537,6 @@ namespace IdManagement.Controllers
         #endregion
 
 
-        /****************************  ABOVE ACTIONS - DB ACCESS MOVED TO IdApi *******************************/
-
-
 
 
         #region Forgot Password - Send out email to set new password
@@ -558,29 +556,25 @@ namespace IdManagement.Controllers
             {
                 return View(model);
             }
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+
+            using HttpClient client = _httpClientFactory.CreateClient(_configuration["ApplicationIds:IdManagementId"]);
+            client.BaseAddress = new Uri(_configuration["AppURLS:IdApiBaseUrl"]);
+
+            string asJson = JsonSerializer.Serialize<ForgotPasswordViewModel>(model);
+            StringContent content = new StringContent(asJson, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await client.PostAsync("/api/v1/Account/ForgotPasswordAsync", content);
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("~/Account/ForgotPassword(ForgotPasswordViewModel) - userManager unable to retrieve {0}'s account information.", model.Email);
-                throw new InvalidOperationException("An error occurred retrieving user account information.");
+                _logger.LogError("~/Account/ForgotPassword(ForgotPasswordViewModel) - An error occurred with the Http Response Message. Response:{0}", response);
+                throw new HttpRequestException($"An error occurred attempting to reset the password on the account with the email address: {model.Email}");
             }
 
-            var emailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
-            if (!emailConfirmed)
-            {
-                _logger.LogError("~/Account/ForgotPassword(ForgotPasswordViewModel) - user id:{0} didn't confirm thier email address but was still able to login. Check Identity options configuration", user.Id);
-                TempData["StatusMessage"] = "The email address for your account has not been confirmed. Please confirm your email so we can send you a password reset token.";
-                return View();
-            }
+            string responseContent = await response.Content.ReadAsStringAsync();
+            ResetPassword forgotPasswordObj = JsonSerializer.Deserialize<ResetPassword>(responseContent);
+            response.EnsureSuccessStatusCode();
 
-            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-            if (String.IsNullOrWhiteSpace(code))
-            {
-                _logger.LogError("~/Account/ForgotPassword(ForgotPasswordViewModel) - userManager was not able to Generate Password ResetToken for user id:{0}.", user.Id);
-                throw new InvalidOperationException("An error occurred generating the password reset token.");
-            }
-
-            var callbackUrl = Url.ResetPasswordCallbackLink(user.Id, code, Request.Scheme);
+            var callbackUrl = Url.ResetPasswordCallbackLink(forgotPasswordObj.Code, Request.Scheme);
 
             try
             {
@@ -588,7 +582,7 @@ namespace IdManagement.Controllers
             }
             catch (SmtpException ex)
             {
-                _logger.LogError("An error occurred sending Password reset email for user id:{0}: {1}", user.Id, ex.StackTrace);
+                _logger.LogError("An error occurred sending Password reset email for User Email:{0}, Error:{1}, Error Message{2}, Stack Trace:{3}", forgotPasswordObj.Email, ex, ex.Message, ex.StackTrace);
                 throw;
             }
 
@@ -604,7 +598,7 @@ namespace IdManagement.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult ResetPassword(string code = null)
+        public IActionResult ResetPassword([FromQuery] string code)
         {
             if (code == null)
             {
@@ -625,19 +619,28 @@ namespace IdManagement.Controllers
                 return View(model);
             }
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
+            ResetPassword resetPassword = new ResetPassword
             {
-                _logger.LogError("~/Account/ResetPassword(ResetPasswordViewModel) - userManager unable to retrieve {0}'s account information.");
-                throw new InvalidOperationException("An error occurred retrieving user account information.");
-            }
+                Email = model.Email,
+                Code = model.Code,
+                Password = model.Password,
+            };
 
-            var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
-            if (!result.Succeeded)
+            using HttpClient client = _httpClientFactory.CreateClient(_configuration["ApplicationIds:IdManagementId"]);
+            client.BaseAddress = new Uri(_configuration["AppURLS:IdApiBaseUrl"]);
+
+            string asJson = JsonSerializer.Serialize<ResetPassword>(resetPassword);
+            StringContent content = new StringContent(asJson, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response = await client.PostAsync("/api/v1/Account/ResetPasswordAsync", content);
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("~/Account/ResetPassword(ResetPasswordViewModel) - userManager unable to reset password for {0}'s account information.");
-                throw new InvalidOperationException("An error occurred resetting the account password.");
+                string badResponse = await response.Content.ReadAsStringAsync();
+                ResponsePayload badResponseObj = JsonSerializer.Deserialize<ResponsePayload>(badResponse);
+                _logger.LogError("~/Account/ResetPassword(ResetPasswordViewModel) - Error from IdApi - An Error occurred resetting the account password. StatusCode:{0}, Error Message:{1}", badResponseObj.StatusCode, badResponseObj.Message);
+                return Redirect(_configuration["AppURLS:PublicError"] + $"?statusCode={badResponseObj.StatusCode}");
             }
+            response.EnsureSuccessStatusCode();
 
             return RedirectToAction(nameof(ResetPasswordConfirmation));
         }
@@ -653,24 +656,10 @@ namespace IdManagement.Controllers
 
 
 
-
         #region MFA - Enable and Disable Only, LoginWith2FA part of IS4 responsibilty
         [HttpGet]
-        public async Task<IActionResult> Disable2faWarning()
+        public IActionResult Disable2faWarning()
         {
-            var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/Disable2fWarning - userManager unable to retrieve id:{0}'s account information.", id);
-                throw new InvalidOperationException($"Unable to load account information.");
-            }
-
-            if (!user.TwoFactorEnabled)
-            {
-                _logger.LogError("~/Account/Disable2faWarning - an error occurred disabling 2fa for user id:{0}. 2FA was returned as false. User should not have been able to hit this endpoint.", id);
-                throw new InvalidOperationException($"Unexpected error occurred disabling 2FA.");
-            }
             return View(nameof(Disable2fa));
         }
 
@@ -679,48 +668,56 @@ namespace IdManagement.Controllers
         public async Task<IActionResult> Disable2fa()
         {
             var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/Disable2fa - userManager could not retrieve id:{0}'s account information.", id);
-                throw new InvalidOperationException($"Unable to load user information.");
-            }
 
-            var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
-            if (!disable2faResult.Succeeded)
-            {
-                _logger.LogError("~/Account/Disable2fa - an error occurred disabling 2fa for user id:{0}.", id);
-                throw new InvalidOperationException($"Unexpected error occurred disabling 2FA for user id:{id}.");
-            }
+            string accessToken = await GetAccessToken();
 
-            _logger.LogInformation("User with email id:{0} has disabled 2fa.", id);
+            string asJson = JsonSerializer.Serialize<string>(id);
+            StringContent content = new StringContent(asJson, Encoding.UTF8, "application/json");
 
-            //Overwrite current AuthenticationKey incase it somehow made it into evil hands. If/when user re-enables 2FA, a new AuthenticationKey will be created and used.
-            var resetResult = await _userManager.ResetAuthenticatorKeyAsync(user);
-            if (!resetResult.Succeeded)
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/Disable2faAsync") { Content = content };
+            using HttpResponseMessage response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
             {
-                //In this case an Error does not need to be thrown. But log so developer knows something went wrong.
-                _logger.LogError("~/Account/Disable2fa - An error occurred: userManger couldn't ResetAuthenticatorKeyAsync");
+                string badResponse = await response.Content.ReadAsStringAsync();
+                _logger.LogError("~/Account/EnableAuthenticator - Error from IdApi - {0}", badResponse);
+                TempData["ErrorMessage"] = "An error occurred while disabling 2 factor authentication on your account.";
+                return RedirectToAction(nameof(Index));
             }
+            response.EnsureSuccessStatusCode();
 
             TempData["StatusMessage"] = "You have disabled two factor authentication. 2FA can be re-enabled at anytime.";
-            var vm = BuildIndexViewModel(user);
-            return RedirectToAction(nameof(Index), vm);
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
         public async Task<IActionResult> EnableAuthenticator()
         {
-            var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
+            string id = User?.FindFirstValue("sub");
+
+            string accessToken = await GetAccessToken();
+
+            string asJson = JsonSerializer.Serialize<string>(id);
+            StringContent content = new StringContent(asJson, Encoding.UTF8, "application/json");
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/LoadSharedKeyAndQrCodeUriAsync") { Content = content };
+            using HttpResponseMessage response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("~/Account/EnableAuthenticator - userManager could not get account information for user id:{0}", id);
-                throw new InvalidOperationException($"Unable to load user information.");
+                string badResponse = await response.Content.ReadAsStringAsync();/********************  LOOK AT THIS, NOT FINISHED        *****************/
+                _logger.LogError("~/Account/EnableAuthenticator - Error from IdApi - {0}", badResponse);
+                TempData["ErrorMessage"] = "An error occurred while setting up your account for 2 factor authentication.";
+                return RedirectToAction(nameof(Index));
             }
 
-            var model = new EnableAuthenticatorViewModel();
-            await LoadSharedKeyAndQrCodeUriAsync(user, model);
+            string responseObj = await response.Content.ReadAsStringAsync();
+            EnableAuthenticatorViewModel model = JsonSerializer.Deserialize<EnableAuthenticatorViewModel>(responseObj);
+            response.EnsureSuccessStatusCode();
 
             return View(model);
         }
@@ -729,151 +726,59 @@ namespace IdManagement.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EnableAuthenticator(EnableAuthenticatorViewModel model)
         {
-            var id = User?.FindFirstValue("sub");
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not retrieve id:{0}'s account information", id);
-                throw new InvalidOperationException($"Unable to load user information.");
-            }
 
             if (!ModelState.IsValid)
             {
-                await LoadSharedKeyAndQrCodeUriAsync(user, model);
                 return View(model);
             }
 
-            var verificationCode = model.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+            var id = User?.FindFirstValue("sub");
 
-            var is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
-            if (!is2faTokenValid)
-            {
-                ModelState.AddModelError("Code", "Verification code is invalid. Please scan the QR Code or enter the above Verification Code Key. Then use the One-Time password code generated by the Authenticator App to verify and complete 2FA set up.");
-                await LoadSharedKeyAndQrCodeUriAsync(user, model);
-                return View(model);
-            }
+            string accessToken = await GetAccessToken();
 
-            var TwoFactorResult = await _userManager.SetTwoFactorEnabledAsync(user, true);
-            if (!TwoFactorResult.Succeeded)
+            EnableAuthenticator contentModel = new EnableAuthenticator
             {
-                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not set 2fa for id:{0}'s account.", id);
-                throw new InvalidOperationException($"An error occurred setting 2FA for your account.");
-            }
-
-            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-            if (!recoveryCodes.Any())
-            {
-                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - userManager could not generate 2fa recovery codes for id:{0}'s account.", id);
-                throw new InvalidOperationException("An error occurred setting 2FA for your account.");
-            }
-
-            var vm = new EnableAuthenticatorViewModel
-            {
+                Id = id,
+                AuthenticatorUri = model.AuthenticatorUri,
                 Code = model.Code,
                 SharedKey = model.SharedKey,
-                AuthenticatorUri = model.AuthenticatorUri,
-                RecoveryCodes = recoveryCodes.ToArray()
             };
-            //TempData["AuthCodes"] = JsonConvert.SerializeObject(vm);
-            TempData["AuthCodes"] = JsonSerializer.Serialize<EnableAuthenticatorViewModel>(vm);
+
+            string asJson = JsonSerializer.Serialize<EnableAuthenticator>(contentModel);
+            StringContent content = new StringContent(asJson, Encoding.UTF8, "application/json");
+
+            HttpClient client = _httpClientFactory.CreateClient("IdApiAccount");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/EnableAuthenticatorAsync") { Content = content };
+            using HttpResponseMessage response = await client.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                string badResponse = await response.Content.ReadAsStringAsync();
+                ResponsePayload badResponseObj = JsonSerializer.Deserialize<ResponsePayload>(badResponse);
+                if (badResponseObj.StatusCode == 400)
+                {
+                    ModelState.AddModelError("Code", "Verification code is invalid. Please scan the QR Code or enter the above Verification Code Key. Then use the One-Time password code generated by the Authenticator App to verify and complete 2FA set up.");
+                    return View(model);
+                }
+
+                _logger.LogError("~/Account/EnableAuthenticator(EnableAuthenticatorViewModel) - Error from IdApi - {0}", badResponseObj);
+                TempData["ErrorMessage"] = "An error occurred while setting up your account for 2 factor authentication.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            string responseObj = await response.Content.ReadAsStringAsync();
+            EnableAuthenticatorViewModel responseModel = JsonSerializer.Deserialize<EnableAuthenticatorViewModel>(responseObj);
+            response.EnsureSuccessStatusCode();
+
             _logger.LogInformation("User with id:{0} has enabled 2FA with an authenticator app.", id);
 
-            return RedirectToAction(nameof(ShowCodes));
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ShowCodes()
-        {
-            EnableAuthenticatorViewModel model;
-
-            if (TempData.ContainsKey("AuthCodes"))
-            {
-                _ = new EnableAuthenticatorViewModel();
-                //model = JsonConvert.DeserializeObject<EnableAuthenticatorViewModel>(TempData["AuthCodes"].ToString());
-                model = JsonSerializer.Deserialize<EnableAuthenticatorViewModel>(TempData["AuthCodes"].ToString());
-                TempData["StatusMessage"] = "You have successfully added Two Factor Authentication to your account.";
-            }
-            else
-            {
-                var id = User?.FindFirstValue("sub");
-                var user = await _userManager.FindByIdAsync(id);
-                if (user == null)
-                {
-                    _logger.LogError("~/Account/ShowCodes - userManager could not retrieve id:{0}'s account information", id);
-                    throw new ApplicationException($"Unable to load account information.");
-                }
-
-                var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
-                if (!disable2faResult.Succeeded)
-                {
-                    _logger.LogError("~/Account/ShowCodes - an error occurred disabling 2fa for user id:{0}.", id);
-                }
-
-                var resetResult = await _userManager.ResetAuthenticatorKeyAsync(user);
-                if (!resetResult.Succeeded)
-                {
-                    _logger.LogError("~/AccountShowCodes - An error occurred: userManger couldn't ResetAuthenticatorKeyAsync");
-                }
-
-                _logger.LogError("~/Account/ShowCodes - An error occurred displaying Auth recovery codes to user id:{0}", id);
-                throw new ApplicationException("An error occurred showing 2FA Authentication Codes. Please try setting up 2FA again.");
-            }
-
-            return View(model);
+            return View("ShowCodes", responseModel);
         }
         #endregion
 
 
-        #region Helpers
-        private IndexViewModel BuildIndexViewModel(ApplicationUser appilcationUser)
-        {
-            IndexViewModel indexViewModel = new IndexViewModel
-            {
-                TwoFactor = appilcationUser.TwoFactorEnabled,
-                Username = appilcationUser.UserName,
-                Email = appilcationUser.Email,
-                PhoneNumber = appilcationUser.PhoneNumber
-            };
-            return indexViewModel;
-        }
 
-        private string FormatKey(string unformattedKey)
-        {
-            var result = new StringBuilder();
-            int currentPosition = 0;
-            while (currentPosition + 4 < unformattedKey.Length)
-            {
-                result.Append(unformattedKey.Substring(currentPosition, 4)).Append(" ");
-                currentPosition += 4;
-            }
-            if (currentPosition < unformattedKey.Length)
-            {
-                result.Append(unformattedKey.Substring(currentPosition));
-            }
-            return result.ToString().ToLowerInvariant();
-        }
-
-        private string GenerateQrCodeUri(string email, string unformattedKey)
-        {
-            return string.Format(
-                AuthenticatorUriFormat,
-                _urlEncoder.Encode("IdentityManagement"),
-                _urlEncoder.Encode(email),
-                unformattedKey);
-        }
-
-        private async Task LoadSharedKeyAndQrCodeUriAsync(ApplicationUser user, EnableAuthenticatorViewModel model)
-        {
-            var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            if (string.IsNullOrEmpty(unformattedKey))
-            {
-                await _userManager.ResetAuthenticatorKeyAsync(user);
-                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
-            }
-
-            model.SharedKey = FormatKey(unformattedKey);
-            model.AuthenticatorUri = GenerateQrCodeUri(user.Email, unformattedKey);
-        }
 
         /// <summary>
         /// Get User's access_token
@@ -889,7 +794,6 @@ namespace IdManagement.Controllers
 
             return accessToken;
         }
-        #endregion
 
         [HttpGet]
         [AllowAnonymous]
