@@ -43,7 +43,7 @@ namespace IS4
             {
                 options.AddPolicy("IS4", policy =>
                 {
-                    policy.WithOrigins(Configuration["AppURLS:IdManagementBaseUrl"], Configuration["AppURLS:IdApiBaseUrl"])
+                    policy.WithOrigins(Configuration["AppURLS:IdManagementBaseUrl"], Configuration["AppURLS:IdApiBaseUrl"], Configuration["AppURLS:MainClientBaseUrl"])
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
@@ -52,7 +52,7 @@ namespace IS4
             {
                 options.Cookie.Name = Configuration["Properties:SharedAntiForgCookie"];
                 options.SuppressXFrameOptionsHeader = true;
-                options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["CookieExpireSeconds"].ToString()));
+                //options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
             });
 
             services.AddHsts(options =>
@@ -81,12 +81,13 @@ namespace IS4
 
             // not recommended for production - you need to store your key material somewhere secure
             builder.AddDeveloperSigningCredential();
-
-            services.AddAuthentication().AddCookie("Cookies");
+            
+            //services.AddAuthentication().AddCookie("Cookies");//way it was configured for Shared cookie between IS4 and IdManagement: probably don't need a shared cookie if I make IdManagement is both a client and a resource.
+            services.AddAuthentication("Cookies").AddCookie("Cookies");
             services.ConfigureApplicationCookie(AppCookieOptions.CookieAuthOptions);
             services.Configure<CookiePolicyOptions>(AppCookieOptions.CookiePolicy);
 
-            services.ConfigureNonBreakingSameSiteCookies();//see AppCookieOptions
+            services.ConfigureNonBreakingSameSiteCookies();//see AppCookieOptions.cs
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment Environment)
@@ -107,7 +108,8 @@ namespace IS4
 
             app.UseSecurityHeadersMiddleware(new SecurityHeadersBuilder()
                   .AddDefaultSecurePolicy()
-                  .AddCustomHeader("X-My-Custom-Header", "From-MiddleWareFiles")
+                  .AddCustomHeader("Access-Control-Allow-Origin", "*")
+                  .AddCustomHeader("Content-Security-Policy", "frame-ancestors 'self' https://localhost:443/;")
                 );
 
             app.UseStaticFiles();

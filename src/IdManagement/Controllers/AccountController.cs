@@ -447,7 +447,7 @@ namespace IdManagement.Controllers
 
 
 
-        #region When user is already logged in and wants to change password 
+        #region When user is already logged in and wants to change password. Does not send out an email.
         /****************** START When user is already logged in and wants to change password **********************/
         [HttpGet]
         [Authorize]

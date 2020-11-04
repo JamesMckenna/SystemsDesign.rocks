@@ -1,16 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
+using System;
+using System.IO;
+using System.Linq;
 namespace IdApi
 {
     public class Program
@@ -27,13 +23,13 @@ namespace IdApi
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
 
-            Log.Information("Logging from Id Management Program.cs - Id Management starting up");
+            Log.Information("Logging from IdApi Program.cs - IdApi starting up");
 
             try
             {
 
                 var seed = args.Contains("/seed");
-                //var seed = true;
+                seed = false;
                 if (seed)
                 {
                     args = args.Except(new[] { "/seed" }).ToArray();

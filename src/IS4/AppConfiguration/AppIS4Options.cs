@@ -18,6 +18,7 @@ namespace IS4.AppConfiguration
             options.Events.RaiseInformationEvents = true;
             options.Events.RaiseFailureEvents = true;
             options.Events.RaiseSuccessEvents = true;
+            
             // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
             options.EmitStaticAudienceClaim = true;
 
@@ -25,11 +26,15 @@ namespace IS4.AppConfiguration
 
             options.MutualTls.Enabled = true;
 
+            //Session Cookie
             options.Authentication.CheckSessionCookieName = _configuration["Properties:SharedSessionCookie"];
-            options.Authentication.CookieLifetime = TimeSpan.FromSeconds(Double.Parse(_configuration["CookieExpireSeconds"].ToString()));
+            options.Authentication.CookieLifetime = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
 
             options.Authentication.CookieSlidingExpiration = true;
+
             options.Authentication.RequireCspFrameSrcForSignout = false;
+
+            options.Cors.CorsPolicyName = "IS4";
         }
     }
 }

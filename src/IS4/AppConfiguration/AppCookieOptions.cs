@@ -29,9 +29,12 @@ namespace IS4.AppConfiguration
 
             options.Cookie.IsEssential = true;
 
-            options.ExpireTimeSpan = TimeSpan.FromSeconds(Double.Parse(_configuration["CookieExpireSeconds"].ToString()));
+            //Configures the ticket lifetime inside the cookie; not the cookie lifetime ::AuthCookie
+            //This is separate from the value of , which specifies how long the browser will keep the cookie.
+            //This should be controlled and set in IS4 Options
+            options.ExpireTimeSpan = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString()));
+            //This is for session lifetimes....not token
             options.SlidingExpiration = true;
-
            
             var protectionProvider = DataProtectionProvider.Create(new DirectoryInfo(@"C:\Secrets\"),
             options =>

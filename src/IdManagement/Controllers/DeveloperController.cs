@@ -253,7 +253,7 @@ namespace IdManagement.Controllers
                 throw;
             }
 
-            TempData["Message"] = "Call Api as User";
+            TempData["Message"] = "Call Api as Client";
             TempData["Token"] = JArray.Parse(response).ToString();
 
             return View("Developer");
@@ -341,6 +341,11 @@ namespace IdManagement.Controllers
             }
 
             return disco.IntrospectionEndpoint;
+        }
+
+        public IActionResult Secure()
+        {
+            return View();
         }
     }
 }

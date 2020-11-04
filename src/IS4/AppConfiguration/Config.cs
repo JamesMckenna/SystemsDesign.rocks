@@ -14,7 +14,7 @@ namespace IS4.AppConfiguration
         internal static void SetDI(IConfiguration configuration)
         {
             _configuration = configuration;
-            expireSeconds = Double.Parse(_configuration["CookieExpireSeconds"].ToString());
+            expireSeconds = Double.Parse(_configuration["LifeTimes:TokenExpireSeconds"].ToString());
         }
 
         internal static IEnumerable<IdentityResource> IdentityResources =>
@@ -52,7 +52,7 @@ namespace IS4.AppConfiguration
                 new Client
                 {
                     ClientId = _configuration["ApplicationIds:IdManagementId"],
-                    ClientName = _configuration["ApplicationNames:Identity Management"],
+                    ClientName = _configuration["ApplicationNames:IdentityManagementName"],
                     ClientSecrets = {
                         new Secret(_configuration["ApplicationSecrets:IdManagementSecret"].Sha256())
                     },
@@ -70,7 +70,8 @@ namespace IS4.AppConfiguration
                     },
 
                     AllowedCorsOrigins = new string[] {
-                        _configuration["AppURLS:IdManagementBaseUrl"]
+                        _configuration["AppURLS:IdManagementBaseUrl"],
+                        _configuration["AppURLS:MainClientBaseUrl"]
                     },
 
                     AllowedScopes = {
@@ -108,6 +109,75 @@ namespace IS4.AppConfiguration
                     IdentityTokenLifetime = (int)expireSeconds,
                     AccessTokenLifetime = (int)expireSeconds,
                     AuthorizationCodeLifetime = (int)expireSeconds,
+                },
+
+
+                 new Client
+                {
+                    ClientId = _configuration["ApplicationIds:MainClient"],
+                    ClientName = _configuration["ApplicationNames:MainClient"],
+
+                    RequireClientSecret = false,
+
+                    AllowedGrantTypes = {
+                        GrantType.AuthorizationCode,
+                        GrantType.ClientCredentials
+                    },
+
+                    RedirectUris = new string[] { 
+                        _configuration["AppURLS:MainClientBaseUrl"] + "/callback.html",
+                        _configuration["AppURLS:MainClientBaseUrl"] + "/silent-refresh.html",
+                        _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/*"
+                    },
+
+                    PostLogoutRedirectUris = new string[] {
+                        _configuration["AppURLS:MainClientBaseUrl"]
+                    },
+
+                    AllowedCorsOrigins = new string[] {
+                        _configuration["AppURLS:IdManagementBaseUrl"],
+                        _configuration["AppURLS:IS4BaseUrl"],
+                        _configuration["AppURLS:MainClientBaseUrl"]
+                    },
+
+                    AllowedScopes = {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile,
+                        IdentityServerConstants.StandardScopes.Email,
+                        "IdApi", "offline_access"
+                    },
+
+                    RequirePkce = true,
+                    AllowPlainTextPkce = false,
+                    RequireConsent = true,
+
+                    AlwaysIncludeUserClaimsInIdToken = true,
+
+                    //AllowAccessTokensViaBrowser = true,
+                    //The refresh token should be long lived (at least longer than the access token).
+                    //Once the refresh token expires, the user has to login again. Without sliding expiration the refresh token will expire in an absolute time, having the user to login again.
+                    //https://stackoverflow.com/questions/50363450/identityserver4-access-token-lifetime/50364604
+                    AccessTokenType = AccessTokenType.Reference,
+                    AllowOfflineAccess = true, //Allows Refresh Token
+                    
+                    //Token lifetime - NOT COOKIE LIFETIME, NOT AUTHENTICATION LIFETIME. Just how long an access token can be used against an API (Resource registered with IS4) 
+                    IdentityTokenLifetime = (int)expireSeconds, //Default 300 seconds
+                    AccessTokenLifetime = (int)expireSeconds, //Default 3600 seconds, 1 hour
+                    AuthorizationCodeLifetime =  300, //60,//(int)expireSeconds, //Default 300 seconds: Once User consents, this token should no longer be needed until re-authorization. This AuthorizationCode is used to prove to IS4 that an access token and id token have been constented too and from there the refresh token takes over. So if using refresh tokens, AuthorizationCode shouldn't need a long lifetime. 
+                    
+                    //AbsoluteRefreshTokenLifetime = (int)expireSeconds * 2, //Defaults to 2592000 seconds / 30 days - NOT GOOD FOR SPA's
+                    SlidingRefreshTokenLifetime = (int)expireSeconds * 2,//token will be refreshed only if this value has 50% elasped. Router Guard on Vue Router will ask for refresh on every page navigation. If 50% elapsed, refresh will happen. Setting the accessTokenExpiringNotificationTime of the oidc-client to the same timeout, will allow refresh on page navigation (assuming access and id tokens haven't already expired)
+                    RefreshTokenUsage = TokenUsage.OneTimeOnly,
+                    RefreshTokenExpiration= TokenExpiration.Sliding,
+                    UpdateAccessTokenClaimsOnRefresh = true, //Gets or sets a value indicating whether the access token (and its claims) should be updated on a refresh token request.
+                                       
+                     UserSsoLifetime = (int)expireSeconds,
+                    /* The maximum duration (in seconds) since the last time the user authenticated. 
+                     * Defaults to null. 
+                     * You can adjust the lifetime of a session token to control when and how often a user is required to reenter credentials
+                     * instead of being silently authenticated, when using a web application.*/
+
+
                 }
             };
     }

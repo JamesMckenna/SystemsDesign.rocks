@@ -28,7 +28,7 @@ namespace IdManagement.AppConfiguration
             options.GetClaimsFromUserInfoEndpoint = true;//keeps id_token smaller
             options.SaveTokens = true;
             options.SignedOutCallbackPath = new PathString("/signout-callback-oidc");
-            
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
                 NameClaimType = "name",
@@ -42,21 +42,24 @@ namespace IdManagement.AppConfiguration
 
             options.RequireHttpsMetadata = true;
 
-            options.UseTokenLifetime = true;
+            options.UseTokenLifetime = true; 
 
-            options.Events.OnTicketReceived = (context) =>
-            {
-                context.Properties.IssuedUtc = DateTime.UtcNow;
-                //Part 1 of Session cookie lifetime. Part 2 is in cookie options
-                //setting of the ticket that is stored inside the cookie
-                //This ticket determines the validity of the users authentication session
-                double expireSeconds = Double.Parse(_configuration["CookieExpireSeconds"].ToString());
-                context.Properties.ExpiresUtc = DateTime.UtcNow.AddSeconds(expireSeconds);
+
+            //options.Events.OnAuthorizationCodeReceived
+
+            //options.Events.OnTicketReceived = (context) =>//IF ticket is Identity Ticket (Authentication)
+            //{
+            //    context.Properties.IssuedUtc = DateTime.UtcNow;
+            //    //Part 1 of Session cookie lifetime. Part 2 is in cookie options
+            //    //setting of the ticket that is stored inside the cookie
+            //    //This ticket determines the validity of the users authentication session
+            //    double expireSeconds = Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString());
+            //    context.Properties.ExpiresUtc = DateTime.UtcNow.AddSeconds(expireSeconds);
                 
-                context.Properties.IsPersistent = false;
-                context.Properties.AllowRefresh = true;
-                return Task.CompletedTask;
-            };
+            //    context.Properties.IsPersistent = false;
+            //    context.Properties.AllowRefresh = true;
+            //    return Task.CompletedTask;
+            //};
 
             options.Events = new OpenIdConnectEvents
             {

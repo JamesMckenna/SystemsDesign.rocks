@@ -1,109 +1,112 @@
 ﻿@using IdentityServer4.Extensions
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @{
     string name = null;
     if (!true.Equals(ViewData["signed-out"]))
     {
         name = Context.User?.GetDisplayName();
     }
+    string mainClientUrl = Configuration["AppURLS:MainClientBaseUrl"];
 }
 
-    <div class="nav-page">
+<div class="nav-page">
 
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 
-            <div class="container">
+        <div class="container">
 
-                <a href="~/" class="navbar-brand">
-                    <img src="~/icon.png" class="icon-banner">
-                    Identity Management
-                </a>
+            <a href="@mainClientUrl" class="navbar-brand">
+                <img src="~/icon.png" class="icon-banner">
+                SystemsDesign.rocks
+            </a>
 
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+            <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
 
-                    <ul class="navbar-nav flex-grow-1">
+                <ul class="navbar-nav flex-grow-1">
 
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" asp-controller="Home" asp-action="Index">Home</a>
+                    </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                    </li>
 
-                        @if (this.Context.User.Identity.IsAuthenticated)
-                        {
-                            <li>
-                                <ul class="navbar-nav mr-auto">
-
-                                    <li class="nav-item dropdown">
-
-                                        <a href="#" type="button" class="dropdown-toggle nav-link text-light" data-toggle="dropdown">Developer Links<b class="caret"></b></a>
-
-                                        <div class="dropdown-menu">
-
-                                            <a class="dropdown-item text-dark" asp-controller="Home" asp-action="Secure">Secure</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="AccessToken">View Access Token</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="DiscoveryDocument">Discovery Document</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="UserInfoEndpoint">User Info Endpoint</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="TokenIntrospectionEndpoint">Token Introspection Endpoint</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="TokenRevocationEndpoint">Token Revocation Endpoint</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsUser">Call Api As User</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsClient">Call Api As Client</a>
-
-                                            <a class="dropdown-item text-dark" asp-controller="healthz">Application Health</a>
-
-                                        </div>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
+                    @if (this.Context.User.Identity.IsAuthenticated)
+                    {
                         <li>
-                            @if (!string.IsNullOrWhiteSpace(name))
-                            {
-                                <ul class="navbar-nav mr-auto">
-                                    <li class="nav-item dropdown">
+                            <ul class="navbar-nav mr-auto">
 
-                                        <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">@name <b class="caret"></b></a>
+                                <li class="nav-item dropdown">
 
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item text-dark" asp-action="Index" asp-controller="Account">Manage Account</a>
-                                            <a class="dropdown-item text-dark" asp-action="Logout" asp-controller="Account">Logout</a>
-                                        </div>
+                                    <a href="#" type="button" class="dropdown-toggle nav-link text-light" data-toggle="dropdown">Developer Links<b class="caret"></b></a>
 
-                                    </li>
-                                </ul>
-                            }
-                            else
-                            {
-                                <ul class="navbar-nav mr-auto">
-                                    <li class="nav-item dropdown">
+                                    <div class="dropdown-menu">
 
-                                        <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">Log In / Register<b class="caret"></b></a>
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="Secure">Secure</a>
 
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item text-dark" asp-action="Login" asp-controller="Account">Log In</a>
-                                            <a class="dropdown-item text-dark" asp-action="Register" asp-controller="Account">Register</a>
-                                        </div>
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="AccessToken">View Access Token</a>
 
-                                    </li>
-                                </ul>
-                            }
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="DiscoveryDocument">Discovery Document</a>
+
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="UserInfoEndpoint">User Info Endpoint</a>
+
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="TokenIntrospectionEndpoint">Token Introspection Endpoint</a>
+
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="TokenRevocationEndpoint">Token Revocation Endpoint</a>
+
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsUser">Call Api As User</a>
+
+                                        <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsClient">Call Api As Client</a>
+
+                                        <a class="dropdown-item text-dark" asp-controller="healthz">Application Health</a>
+
+                                    </div>
+                                </li>
+                            </ul>
                         </li>
-                    </ul>
-                </div>
+                    }
+
+                    <li>
+                        @if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            <ul class="navbar-nav mr-auto">
+                                <li class="nav-item dropdown">
+
+                                    <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">@name <b class="caret"></b></a>
+
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item text-dark" asp-action="Index" asp-controller="Account">Manage Account</a>
+                                        <a class="dropdown-item text-dark" asp-action="Logout" asp-controller="Account">Logout</a>
+                                    </div>
+
+                                </li>
+                            </ul>
+                        }
+                        else
+                        {
+                            <ul class="navbar-nav mr-auto">
+                                <li class="nav-item dropdown">
+
+                                    <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">Log In / Register<b class="caret"></b></a>
+
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item text-dark" asp-action="Login" asp-controller="Account">Log In</a>
+                                        <a class="dropdown-item text-dark" asp-action="Register" asp-controller="Account">Register</a>
+                                    </div>
+
+                                </li>
+                            </ul>
+                        }
+                    </li>
+                </ul>
             </div>
-        </nav>
-    </div>
+        </div>
+    </nav>
+</div>

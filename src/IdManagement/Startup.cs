@@ -41,6 +41,7 @@ namespace IdManagement
             string IdManagementURL = Configuration["AppURLS:IdManagementBaseUrl"];
             string IdApiURL = Configuration["AppURLS:IdApiBaseUrl"];
             string IS4URL = Configuration["AppURLS:IS4BaseUrl"];
+            string MainClient = Configuration["AppURLS:MainClientBaseUrl"];
 
             services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"C:\Secrets\"))
                 .SetApplicationName(Configuration["Properties:ApplicationName"]);
@@ -50,14 +51,14 @@ namespace IdManagement
             {
                 options.AddPolicy("default", policy =>
                 {
-                    policy.WithOrigins(IdApiURL, IS4URL).AllowAnyHeader().AllowAnyMethod();
+                    policy.WithOrigins(IdApiURL, IS4URL, MainClient).AllowAnyHeader().AllowAnyMethod();
                 });
             });
             services.AddAntiforgery(options =>
             {
                 options.Cookie.Name = Configuration["Properties:SharedAntiForgCookie"];
                 options.SuppressXFrameOptionsHeader = true;
-                options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["CookieExpireSeconds"].ToString()));
+                options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
             });
             services.AddHsts(options =>
             {
@@ -97,6 +98,7 @@ namespace IdManagement
             services.AddDistributedMemoryCache();
 
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
 
             services.AddAuthentication(AppAuthenticationOptions.AuthOptions)
                .AddCookie("Cookies", AppCookieOptions.CookieAuthOptions)
@@ -154,7 +156,7 @@ namespace IdManagement
 
             app.UseSecurityHeadersMiddleware(new SecurityHeadersBuilder()
                   .AddDefaultSecurePolicy()
-                  .AddCustomHeader("X-My-Custom-Header", "From-MiddleWareFiles")
+                  .AddCustomHeader("X-My-Custom-Header", "From-MiddleWareFiles")//EXAMPLE
                 );
 
             app.UseStaticFiles();

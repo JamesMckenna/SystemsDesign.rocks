@@ -9,7 +9,9 @@ namespace IS4.Services.SecurityHeaders
 
         public SecurityHeadersBuilder AddDefaultSecurePolicy()
         {
-            AddFrameOptionsDeny();
+            //AddFrameOptionsDeny();
+            //AddFrameOptionsSameOrigin();
+            RemoveHeader("X-Frame-Options");
             AddXssProtectionBlock();
             AddContentTypeOptionsNoSniff();
             AddStrictTransportSecurityMaxAge();
