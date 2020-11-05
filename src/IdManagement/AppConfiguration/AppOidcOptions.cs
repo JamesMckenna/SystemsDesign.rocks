@@ -42,24 +42,24 @@ namespace IdManagement.AppConfiguration
 
             options.RequireHttpsMetadata = true;
 
-            options.UseTokenLifetime = true; 
+            options.UseTokenLifetime = true;
 
 
             //options.Events.OnAuthorizationCodeReceived
 
-            //options.Events.OnTicketReceived = (context) =>//IF ticket is Identity Ticket (Authentication)
-            //{
-            //    context.Properties.IssuedUtc = DateTime.UtcNow;
-            //    //Part 1 of Session cookie lifetime. Part 2 is in cookie options
-            //    //setting of the ticket that is stored inside the cookie
-            //    //This ticket determines the validity of the users authentication session
-            //    double expireSeconds = Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString());
-            //    context.Properties.ExpiresUtc = DateTime.UtcNow.AddSeconds(expireSeconds);
-                
-            //    context.Properties.IsPersistent = false;
-            //    context.Properties.AllowRefresh = true;
-            //    return Task.CompletedTask;
-            //};
+            options.Events.OnTicketReceived = (context) =>//IF ticket is Identity Ticket (Authentication)
+            {
+                context.Properties.IssuedUtc = DateTime.UtcNow;
+                //Part 1 of Session cookie lifetime. Part 2 is in cookie options
+                //setting of the ticket that is stored inside the cookie
+                //This ticket determines the validity of the users authentication session
+                double expireSeconds = Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString());
+                context.Properties.ExpiresUtc = DateTime.UtcNow.AddSeconds(expireSeconds);
+
+                context.Properties.IsPersistent = false;
+                context.Properties.AllowRefresh = true;
+                return Task.CompletedTask;
+            };
 
             options.Events = new OpenIdConnectEvents
             {

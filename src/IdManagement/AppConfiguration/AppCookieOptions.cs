@@ -35,11 +35,11 @@ namespace IdManagement.AppConfiguration
             };
 
 
-            //#region Part 2 of session cookie lifetime, Part 1 in OIDC Options
-            ////setting of the ticket that is stored inside the cookie
-            //options.ExpireTimeSpan = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString()));
-            //options.SlidingExpiration = true;
-            //#endregion
+            #region Part 2 of session cookie lifetime, Part 1 in OIDC Options
+            //setting of the ticket that is stored inside the cookie
+            options.ExpireTimeSpan = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString()));
+            options.SlidingExpiration = true;
+            #endregion
 
             options.LoginPath = new PathString("/Account/Login");
 
