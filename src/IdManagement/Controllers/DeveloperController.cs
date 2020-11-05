@@ -1,13 +1,16 @@
 ﻿using IdentityModel.Client;
+using IdManagement.Services.HealthCheck;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -32,15 +35,18 @@ namespace IdManagement.Controllers
         private readonly IConfiguration _configuration;
         private readonly ILogger<DeveloperController> _logger;
         private IDataProtectionProvider _protectionProvider;
+        private readonly HealthCheckService _healthCheckService;
         public DeveloperController(IHttpClientFactory httpClientFactory, 
             IConfiguration configuration, 
             ILogger<DeveloperController> logger,
-            IDataProtectionProvider protectionProvider)
+            IDataProtectionProvider protectionProvider,
+            HealthCheckService healthCheckService)
         {
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger;
             _protectionProvider = protectionProvider;
+            _healthCheckService = healthCheckService;
         }
 
         public IActionResult Index()
@@ -343,6 +349,7 @@ namespace IdManagement.Controllers
             return disco.IntrospectionEndpoint;
         }
 
+        [HttpGet]
         public IActionResult Secure()
         {
             return View();

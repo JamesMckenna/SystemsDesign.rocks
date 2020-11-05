@@ -26,7 +26,7 @@ namespace IdManagement.Controllers
                 ? "Hello: " + HttpContext.User.Claims.First(c => c.Type == "name").Value 
                 : "You're not signed in?";
 
-
+            //Just to read cookies.....delete this at some point or add a controller action and page to render cookie values
             var authCookie = HttpContext.Request.Cookies["IS4SDAC"];
 
             if (authCookie != null)
