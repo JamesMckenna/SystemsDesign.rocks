@@ -54,7 +54,7 @@ namespace IdManagement
                     policy.WithOrigins(IdApiURL, IS4URL, MainClient).AllowAnyHeader().AllowAnyMethod();
                 });
             });
-            services.AddAntiforgery(options =>
+            services.AddAntiforgery(options =>//Does this need to be in this app? Can I not just use the AntiForg cookie from IS4
             {
                 options.Cookie.Name = Configuration["Properties:SharedAntiForgCookie"];
                 options.SuppressXFrameOptionsHeader = true;
@@ -74,6 +74,8 @@ namespace IdManagement
             services.AddHttpClient();
             services.AddHttpClient("IdApiAccount");
 
+
+            //Eventually - Remove DB access and Indentity Core. Should all be through IdApi. Need to find a way to email from this app without having Identity as a dependency
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdMangementConnectionStrings:IdManagementDbConnection"]));
 
             services.AddIdentityCore<ApplicationUser>(AppIdentityOptions.App_Identity_Options)
@@ -172,8 +174,7 @@ namespace IdManagement
             });
             #endregion
 
-            app.UseHealthChecks("/healthz", AppHealthCheckOpts.HealthCheckOpts());
-
+            app.UseHealthChecks("/Developer/Healthz", AppHealthCheckOpts.HealthCheckOpts());
 
             app.UseCookiePolicy();
 
@@ -186,7 +187,7 @@ namespace IdManagement
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHealthChecks("/healthz").RequireAuthorization();
+                endpoints.MapHealthChecks("/Developer/Healthz").RequireAuthorization();
                 endpoints.MapDefaultControllerRoute().RequireAuthorization();
             });
         }
