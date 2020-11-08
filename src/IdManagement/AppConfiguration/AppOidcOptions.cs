@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using IdentityModel;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -75,6 +76,12 @@ namespace IdManagement.AppConfiguration
                     context.HttpContext.Response.Cookies?.Delete(_configuration["Properties:SharedAntiForgCookie"]);
                     return Task.CompletedTask;
                 },
+
+                OnRedirectToIdentityProvider = context =>
+                {
+                    context.ProtocolMessage.Prompt = OidcConstants.PromptModes.None;
+                    return Task.CompletedTask;
+                }
             };
 
         }
