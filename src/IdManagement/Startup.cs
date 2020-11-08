@@ -58,7 +58,6 @@ namespace IdManagement
             {
                 options.Cookie.Name = Configuration["Properties:SharedAntiForgCookie"];
                 options.SuppressXFrameOptionsHeader = true;
-                options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
             });
             services.AddHsts(options =>
             {
