@@ -30,14 +30,6 @@
 
                 <ul class="navbar-nav flex-grow-1">
 
-                    <li class="nav-item">
-                        <a class="nav-link text-light" asp-controller="Home" asp-action="Index">Home</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link text-light" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                    </li>
-
                     @if (this.Context.User.Identity.IsAuthenticated)
                     {
                         <li>
@@ -65,7 +57,6 @@
 
                                         <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="CallApiAsClient">Call Api As Client</a>
 
-                                        @*<a class="dropdown-item text-dark" asp-controller="healthz">Application Health</a>*@
                                         <a class="dropdown-item text-dark" asp-controller="Developer" asp-action="Healthz">Application Health</a>
 
                                     </div>
@@ -84,22 +75,6 @@
 
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item text-dark" asp-action="Index" asp-controller="Account">Manage Account</a>
-                                        <a class="dropdown-item text-dark" asp-action="Logout" asp-controller="Account">Logout</a>
-                                    </div>
-
-                                </li>
-                            </ul>
-                        }
-                        else
-                        {
-                            <ul class="navbar-nav mr-auto">
-                                <li class="nav-item dropdown">
-
-                                    <a href="#" class="nav-link dropdown-toggle text-light" data-toggle="dropdown">Log In / Register<b class="caret"></b></a>
-
-                                    <div class="dropdown-menu">
-                                        <a class="dropdown-item text-dark" asp-action="Login" asp-controller="Account">Log In</a>
-                                        <a class="dropdown-item text-dark" asp-action="Register" asp-controller="Account">Register</a>
                                     </div>
 
                                 </li>
