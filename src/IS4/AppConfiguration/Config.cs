@@ -10,11 +10,13 @@ namespace IS4.AppConfiguration
     {
 
         private static IConfiguration _configuration;
-        private static double expireSeconds;
+        private static double tokenExpireSeconds;
+        private static double authCookieExpireSeconds;
         internal static void SetDI(IConfiguration configuration)
         {
             _configuration = configuration;
-            expireSeconds = Double.Parse(_configuration["LifeTimes:TokenExpireSeconds"].ToString());
+            tokenExpireSeconds = Double.Parse(_configuration["LifeTimes:TokenExpireSeconds"].ToString());
+            authCookieExpireSeconds = Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString());
         }
 
         internal static IEnumerable<IdentityResource> IdentityResources =>
@@ -83,7 +85,7 @@ namespace IS4.AppConfiguration
 
                     RequirePkce = true,
                     AllowPlainTextPkce = false,
-                    RequireConsent = true,
+                    RequireConsent = false,
                     
                     FrontChannelLogoutSessionRequired = true,
                     FrontChannelLogoutUri = _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/FrontChannelLogout",
@@ -96,19 +98,19 @@ namespace IS4.AppConfiguration
                     //Better than JWT, Reference tokens can be revoked using Token Revocation Endpoint but means more back channel traffic between Api, Clients and IS4
                     AccessTokenType = AccessTokenType.Reference, 
                     AllowOfflineAccess = true, //enables support for refresh tokens
-                    AbsoluteRefreshTokenLifetime = 0,
-                    
+                    AbsoluteRefreshTokenLifetime = 36000,
 
-                    SlidingRefreshTokenLifetime = (int)expireSeconds,
+
+                    SlidingRefreshTokenLifetime = (int)tokenExpireSeconds,
                     RefreshTokenUsage = TokenUsage.OneTimeOnly,
                     RefreshTokenExpiration= TokenExpiration.Sliding,
 
                     UpdateAccessTokenClaimsOnRefresh = true,
-                    UserSsoLifetime = (int)expireSeconds,
+                    UserSsoLifetime = (int)authCookieExpireSeconds,
 
-                    IdentityTokenLifetime = (int)expireSeconds,
-                    AccessTokenLifetime = (int)expireSeconds,
-                    AuthorizationCodeLifetime = (int)expireSeconds,
+                    IdentityTokenLifetime = (int)tokenExpireSeconds,
+                    AccessTokenLifetime = (int)tokenExpireSeconds,
+                    AuthorizationCodeLifetime = (int)authCookieExpireSeconds,
                 },
 
 
@@ -144,7 +146,7 @@ namespace IS4.AppConfiguration
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
-                        "IdApi", "offline_access"
+                        "offline_access"
                     },
 
                     RequirePkce = true,
@@ -161,17 +163,17 @@ namespace IS4.AppConfiguration
                     AllowOfflineAccess = true, //Allows Refresh Token
                     
                     //Token lifetime - NOT COOKIE LIFETIME, NOT AUTHENTICATION LIFETIME. Just how long an access token can be used against an API (Resource registered with IS4) 
-                    IdentityTokenLifetime = (int)expireSeconds, //Default 300 seconds
-                    AccessTokenLifetime = (int)expireSeconds, //Default 3600 seconds, 1 hour
-                    AuthorizationCodeLifetime =  300, //60,//(int)expireSeconds, //Default 300 seconds: Once User consents, this token should no longer be needed until re-authorization. This AuthorizationCode is used to prove to IS4 that an access token and id token have been constented too and from there the refresh token takes over. So if using refresh tokens, AuthorizationCode shouldn't need a long lifetime. 
+                    IdentityTokenLifetime = (int)tokenExpireSeconds, //Default 300 seconds
+                    AccessTokenLifetime = (int)tokenExpireSeconds, //Default 3600 seconds, 1 hour
+                    AuthorizationCodeLifetime = (int)authCookieExpireSeconds, //Default 300 seconds: Once User consents, this token should no longer be needed until re-authorization. This AuthorizationCode is used to prove to IS4 that an access token and id token have been constented too and from there the refresh token takes over. So if using refresh tokens, AuthorizationCode shouldn't need a long lifetime. 
                     
-                    //AbsoluteRefreshTokenLifetime = (int)expireSeconds * 2, //Defaults to 2592000 seconds / 30 days - NOT GOOD FOR SPA's
-                    SlidingRefreshTokenLifetime = (int)expireSeconds * 2,//token will be refreshed only if this value has 50% elasped. Router Guard on Vue Router will ask for refresh on every page navigation. If 50% elapsed, refresh will happen. Setting the accessTokenExpiringNotificationTime of the oidc-client to the same timeout, will allow refresh on page navigation (assuming access and id tokens haven't already expired)
+                    AbsoluteRefreshTokenLifetime = 36000, //Defaults to 2592000 seconds / 30 days - NOT GOOD FOR SPA's - 36000 = 10 hours
+                    SlidingRefreshTokenLifetime = (int)tokenExpireSeconds,//token will be refreshed only if this value has 50% elasped. Router Guard on Vue Router will ask for refresh on every page navigation. If 50% elapsed, refresh will happen. Setting the accessTokenExpiringNotificationTime of the oidc-client to the same timeout, will allow refresh on page navigation (assuming access and id tokens haven't already expired)
                     RefreshTokenUsage = TokenUsage.OneTimeOnly,
                     RefreshTokenExpiration= TokenExpiration.Sliding,
                     UpdateAccessTokenClaimsOnRefresh = true, //Gets or sets a value indicating whether the access token (and its claims) should be updated on a refresh token request.
                                        
-                     UserSsoLifetime = (int)expireSeconds,
+                     UserSsoLifetime = (int)authCookieExpireSeconds,
                     /* The maximum duration (in seconds) since the last time the user authenticated. 
                      * Defaults to null. 
                      * You can adjust the lifetime of a session token to control when and how often a user is required to reenter credentials
