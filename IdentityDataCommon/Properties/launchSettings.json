@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "IdentityDataCommon": {
+      "commandName": "IdentityDataCommon",
+      "environmentVariables": {
+        "SECRETS_PATH": "C:\\Secrets\\AppSecrets.json"
+      }
+    }
+  }
+}
+//this doesn't work if the code is not run - EG: Dotnet run. A developer uses a class library, but doesn't run it.

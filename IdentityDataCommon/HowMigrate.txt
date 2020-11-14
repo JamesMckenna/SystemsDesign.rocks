@@ -1,0 +1,23 @@
+﻿https://docs.microsoft.com/en-us/ef/core/miscellaneous/cli/dbcontext-creation
+https://docs.microsoft.com/en-us/ef/core/miscellaneous/cli/dotnet
+https://docs.microsoft.com/en-us/aspnet/core/data/ef-mvc/migrations?view=aspnetcore-3.1
+
+The project that is using Entity framework needs to have
+AddMigrationAssembly points to where the DbContext is. 
+Start Up project should be the app using the class library
+The library name where the DbContext is - So NameSpace.DbContext. A reference to the class library containing the DbContext in the application where the DbContext is to be used
+1) services.AddDbContext<IdentityDataCommon.ApplicationDbContext>(options => options.UseSqlServer(Configuration["IdApiConnectionStrings:IdentityDB"], x => x.MigrationsAssembly("IdentityDataCommon")));
+2) services.AddIdentity<IdentityCommon.ApplicationUser, IdentityRole>().AddEntityFrameworkStores<IdentityDataCommon.ApplicationDbContext>()
+3) The NuGet packages: Microsoft.EntityFrameworkCore, Microsoft.EntityFrameworkCore.Design, Microsoft.EntityFrameworkCore.Tools
+4) Have a DbContextFactory in either the App using the DbContext OR the library containing the DbContext. If the factory is there, it will be found; no need to add to IoC container
+cd into the class library where the DbContext is.
+
+To add a new migration:
+C:\RepoDirctory\ClassLibrary> dotnet ef --startup-project 'TheProjectUsingTheClassLibrary' migrations add 'MigrationName' -c DbContext 
+C:\Users\Sam\source\repos\ProjectDirectory\ClassLibrary>dotnet ef --startup-project ..\src\IdApi migrations add InitialSqlServer --context IdentityDataCommon.ApplicationDbContext
+
+
+
+
+To remove: 
+C:\Users\Sam\source\repos\ProjectDirectory\ClassLibrary>dotnet ef migrations remove
