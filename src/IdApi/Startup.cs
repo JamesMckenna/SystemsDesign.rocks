@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
@@ -31,12 +32,15 @@ namespace IdApi
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"C:\Secrets\"))
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Configuration["SECRETS_DIR"]))
                     .SetApplicationName(Configuration["Properties:ApplicationName"]);
 
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdApiConnectionStrings:IdApiDbConnection"]));
+            services.AddDbContext<ApplicationDbContext>(options => 
+                options.UseSqlServer(Configuration["IdApiConnectionStrings:IdentityDB"], x => x.MigrationsAssembly("IdentityDataCommon")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddRoleManager<RoleManager<IdentityRole>>()
+                .AddSignInManager<SignInManager<ApplicationUser>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -132,7 +136,6 @@ namespace IdApi
                 //Using Reference Tokens - lessons calls to IS4 to validate tokens
                 options.EnableCaching = true; //REQUIRES: services.AddDistributedMemoryCache();
                 options.CacheDuration = TimeSpan.FromMinutes(2);
-                //options.DiscoveryDocumentRefreshInterval = TimeSpan.FromSeconds(100);
                 options.SupportedTokens = SupportedTokens.Both;
             });
 
@@ -144,10 +147,10 @@ namespace IdApi
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //if (env.IsDevelopment())
-            //{
-            //    app.UseDeveloperExceptionPage();
-            //}
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
             app.UseMiddleware<AppErrorMiddleware>();
 
             app.UseSwagger(context => {
