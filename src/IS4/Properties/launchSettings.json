@@ -14,11 +14,12 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "SelfHost": {
+    "IS4": {
       "commandName": "Project",
       "commandLineArgs": "\"/seed=false\"",
       "environmentVariables": {
         "SECRETS_PATH": "C:\\Secrets\\AppSecrets.json",
+        "SECRETS_DIR": "C:\\Secrets\\",
         "ASPNETCORE_ENVIRONMENT": "Developement"
       },
       "applicationUrl": "https://localhost:5001"
