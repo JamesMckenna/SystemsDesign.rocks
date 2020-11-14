@@ -80,7 +80,7 @@ namespace IS4.AppConfiguration
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
-                        "IdApi",
+                        "IdApi", "offline_access"
                     },
 
                     RequirePkce = true,
@@ -100,10 +100,9 @@ namespace IS4.AppConfiguration
                     AllowOfflineAccess = true, //enables support for refresh tokens
                     AbsoluteRefreshTokenLifetime = 36000,
 
-
-                    SlidingRefreshTokenLifetime = (int)tokenExpireSeconds,
                     RefreshTokenUsage = TokenUsage.OneTimeOnly,
                     RefreshTokenExpiration= TokenExpiration.Sliding,
+                    SlidingRefreshTokenLifetime = (int)tokenExpireSeconds,
 
                     UpdateAccessTokenClaimsOnRefresh = true,
                     UserSsoLifetime = (int)authCookieExpireSeconds,
@@ -115,7 +114,7 @@ namespace IS4.AppConfiguration
 
 
                  new Client
-                {
+                 {
                     ClientId = _configuration["ApplicationIds:MainClient"],
                     ClientName = _configuration["ApplicationNames:MainClient"],
 
@@ -146,7 +145,7 @@ namespace IS4.AppConfiguration
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Email,
-                        "offline_access"
+                        "offline_access", "IdApi"
                     },
 
                     RequirePkce = true,
@@ -168,9 +167,9 @@ namespace IS4.AppConfiguration
                     AuthorizationCodeLifetime = (int)authCookieExpireSeconds, //Default 300 seconds: Once User consents, this token should no longer be needed until re-authorization. This AuthorizationCode is used to prove to IS4 that an access token and id token have been constented too and from there the refresh token takes over. So if using refresh tokens, AuthorizationCode shouldn't need a long lifetime. 
                     
                     AbsoluteRefreshTokenLifetime = 36000, //Defaults to 2592000 seconds / 30 days - NOT GOOD FOR SPA's - 36000 = 10 hours
-                    SlidingRefreshTokenLifetime = (int)tokenExpireSeconds,//token will be refreshed only if this value has 50% elasped. Router Guard on Vue Router will ask for refresh on every page navigation. If 50% elapsed, refresh will happen. Setting the accessTokenExpiringNotificationTime of the oidc-client to the same timeout, will allow refresh on page navigation (assuming access and id tokens haven't already expired)
                     RefreshTokenUsage = TokenUsage.OneTimeOnly,
-                    RefreshTokenExpiration= TokenExpiration.Sliding,
+                    RefreshTokenExpiration = TokenExpiration.Sliding,
+                    SlidingRefreshTokenLifetime = (int)tokenExpireSeconds,//token will be refreshed only if this value has 50% elasped. Router Guard on Vue Router will ask for refresh on every page navigation. If 50% elapsed, refresh will happen. Setting the accessTokenExpiringNotificationTime of the oidc-client to the same timeout, will allow refresh on page navigation (assuming access and id tokens haven't already expired)
                     UpdateAccessTokenClaimsOnRefresh = true, //Gets or sets a value indicating whether the access token (and its claims) should be updated on a refresh token request.
                                        
                      UserSsoLifetime = (int)authCookieExpireSeconds,
@@ -180,7 +179,7 @@ namespace IS4.AppConfiguration
                      * instead of being silently authenticated, when using a web application.*/
 
 
-                }
+                 }
             };
     }
 }
