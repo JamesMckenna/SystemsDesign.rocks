@@ -27,27 +27,10 @@ namespace IdApi
 
             try
             {
-
-                var seed = args.Contains("/seed");
-                seed = false;
-                if (seed)
-                {
-                    args = args.Except(new[] { "/seed" }).ToArray();
-                }
-
                 var host = CreateHostBuilder(args).Build();
 
-                if (seed)
-                {
-                    Log.Information("Seeding database...");
-                    var config = host.Services.GetRequiredService<IConfiguration>();
-                    var connectionString = config.GetConnectionString("DefaultConnection");
-                    SeedData.EnsureSeedData(connectionString);
-                    Log.Information("Done seeding database.");
-                    return 0;
-                }
-
                 Log.Information("Starting host...");
+
                 CreateHostBuilder(args).Build().Run();
 
                 return 0;
@@ -71,11 +54,22 @@ namespace IdApi
                     var secretsPath = Environment.GetEnvironmentVariable("SECRETS_PATH");
                     var env = hostContext.HostingEnvironment;
                     config.AddJsonFile(secretsPath, false, true);
+                    var configuration = config.Build();
 
+                    //Leave this in for now
+                    //SeedDB(configuration);
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+        private static void SeedDB(IConfiguration configuration)
+        {
+            Log.Information("Seeding database...");
+            var connectionString = configuration["IdApiConnectionStrings:IdentityDB"];
+            SeedData.EnsureSeedData(connectionString);
+            Log.Information("Done seeding database.");
+        }
     }
 }
