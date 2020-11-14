@@ -30,32 +30,20 @@ namespace IS4.AppConfiguration
             options.Cookie.IsEssential = true;
 
             //Configures the ticket lifetime inside the cookie; not the cookie lifetime ::AuthCookie
-            //This is separate from the value of , which specifies how long the browser will keep the cookie.
-            //This should be controlled and set in IS4 Options
+            //This is separate from the value of , which specifies how long the browser will keep the cookie,
+            //which should be controlled and set in IS4 Options
             options.ExpireTimeSpan = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:AuthCookieExpireSeconds"].ToString()));
             //This is for session lifetimes....not token
             options.SlidingExpiration = true;
-           
-            var protectionProvider = DataProtectionProvider.Create(new DirectoryInfo(@"C:\Secrets\"),
-            options =>
-            {
-                options.SetApplicationName(_configuration["Properties:ApplicationName"]);
-            });
+            
+            IDataProtectionProvider protectionProvider = DataProtectionProvider.Create(new DirectoryInfo(_configuration["SECRETS_DIR"]),
+            options => { options.SetApplicationName(_configuration["Properties:ApplicationName"]); });
 
             options.DataProtectionProvider = protectionProvider;
 
-            var protector = protectionProvider.CreateProtector("CookieProtector");
+            IDataProtector protector = protectionProvider.CreateProtector("CookieProtector");
             options.TicketDataFormat = new TicketDataFormat(protector);
         }
-
-
-        internal static void CookiePolicy(CookiePolicyOptions options)
-        {
-            options.MinimumSameSitePolicy = SameSiteMode.None;
-            options.Secure = CookieSecurePolicy.Always;
-            options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
-        }
-
     }
 
 
@@ -102,6 +90,8 @@ namespace IS4.AppConfiguration
         {
             services.Configure<CookiePolicyOptions>(options =>
             {
+                options.Secure = CookieSecurePolicy.Always;//I added
+                options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;//I added
                 options.MinimumSameSitePolicy = Unspecified;
                 options.OnAppendCookie = cookieContext => CheckSameSite(cookieContext.Context, cookieContext.CookieOptions);
                 options.OnDeleteCookie = cookieContext => CheckSameSite(cookieContext.Context, cookieContext.CookieOptions);
