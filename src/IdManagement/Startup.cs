@@ -43,7 +43,7 @@ namespace IdManagement
             string IS4URL = Configuration["AppURLS:IS4BaseUrl"];
             string MainClient = Configuration["AppURLS:MainClientBaseUrl"];
 
-            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"C:\Secrets\"))
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Configuration["SECRETS_DIR"]))
                 .SetApplicationName(Configuration["Properties:ApplicationName"]);
 
             #region CORS Policy, CSP
