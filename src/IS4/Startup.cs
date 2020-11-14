@@ -18,6 +18,7 @@ using Microsoft.Extensions.Hosting;
 using Serilog;
 using System;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace IS4
 {
@@ -36,7 +37,9 @@ namespace IS4
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(@"C:\Secrets\"))
+            var rsaCert = new X509Certificate2(Path.Combine(Configuration["SECRETS_DIR"], "IS4OpenSsl.pfx"), "CertIS4");
+
+            services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Configuration["SECRETS_DIR"]))
                 .SetApplicationName(Configuration["Properties:ApplicationName"]);
 
             services.AddCors(options =>
@@ -52,7 +55,6 @@ namespace IS4
             {
                 options.Cookie.Name = Configuration["Properties:SharedAntiForgCookie"];
                 options.SuppressXFrameOptionsHeader = true;
-                //options.Cookie.Expiration = TimeSpan.FromSeconds(Double.Parse(Configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
             });
 
             services.AddHsts(options =>
@@ -66,31 +68,26 @@ namespace IS4
 
             services.AddLogging();
 
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IS4ConnectionStrings:DefaultConnection"]));
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration["IS4ConnectionStrings:IdentityDB"]));
 
             services.AddIdentity<ApplicationUser, IdentityRole>(AppIdentityOptions.App_Identity_Options)
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
             var builder = services.AddIdentityServer(AppIS4Options.App_IS4_Options)
+                .AddSigningCredential((X509Certificate2)rsaCert)
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
                 .AddInMemoryApiResources(Config.ApiResources)
                 .AddInMemoryClients(Config.Clients)
                 .AddAspNetIdentity<ApplicationUser>();
-
-            // not recommended for production - you need to store your key material somewhere secure
-            builder.AddDeveloperSigningCredential();
             
-            //services.AddAuthentication().AddCookie("Cookies");//way it was configured for Shared cookie between IS4 and IdManagement: probably don't need a shared cookie if I make IdManagement is both a client and a resource.
             services.AddAuthentication("Cookies").AddCookie("Cookies");
             services.ConfigureApplicationCookie(AppCookieOptions.CookieAuthOptions);
-            services.Configure<CookiePolicyOptions>(AppCookieOptions.CookiePolicy);
-
             services.ConfigureNonBreakingSameSiteCookies();//see AppCookieOptions.cs
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment Environment)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment Environment, IConfiguration configuration)
         {
             if (Environment.IsDevelopment())
             {
@@ -105,11 +102,11 @@ namespace IS4
             }
 
             app.UseHttpsRedirection();
-
+           
             app.UseSecurityHeadersMiddleware(new SecurityHeadersBuilder()
                   .AddDefaultSecurePolicy()
                   .AddCustomHeader("Access-Control-Allow-Origin", "*")
-                  .AddCustomHeader("Content-Security-Policy", "frame-ancestors 'self' https://localhost:443/;")
+                  .AddCustomHeader("Content-Security-Policy", $"frame-ancestors 'self' { configuration["AppURLS:MainClientBaseUrl"] };")
                 );
 
             app.UseStaticFiles();
