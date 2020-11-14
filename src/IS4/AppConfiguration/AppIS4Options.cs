@@ -24,8 +24,6 @@ namespace IS4.AppConfiguration
 
             options.Csp.Level = IdentityServer4.Models.CspLevel.Two;
 
-            options.MutualTls.Enabled = true;
-
             //Session Cookie
             options.Authentication.CheckSessionCookieName = _configuration["Properties:SharedSessionCookie"];
             options.Authentication.CookieLifetime = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
