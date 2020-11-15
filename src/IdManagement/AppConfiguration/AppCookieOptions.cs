@@ -47,7 +47,7 @@ namespace IdManagement.AppConfiguration
 
             options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
 
-            var protectionProvider = DataProtectionProvider.Create(new DirectoryInfo(@"C:\Secrets\"),
+            var protectionProvider = DataProtectionProvider.Create(new DirectoryInfo(_configuration["SECRETS_DIR"]),
             options =>
             {
                 options.SetApplicationName(_configuration["Properties:ApplicationName"]);
