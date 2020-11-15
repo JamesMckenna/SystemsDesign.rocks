@@ -43,10 +43,9 @@ namespace IdManagement.AppConfiguration
 
             options.RequireHttpsMetadata = true;
 
+            //Indicates that the authentication session lifetime (e.g. cookies) should match that of the authentication token.
+            //If the token does not provide lifetime information then normal session lifetimes will be used. This is disabled by default.
             options.UseTokenLifetime = true;
-
-
-            //options.Events.OnAuthorizationCodeReceived
 
             options.Events.OnTicketReceived = (context) =>//IF ticket is Identity Ticket (Authentication)
             {
