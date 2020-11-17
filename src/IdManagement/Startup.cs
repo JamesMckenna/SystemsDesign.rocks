@@ -80,7 +80,7 @@ namespace IdManagement
             services.AddIdentityCore<ApplicationUser>(AppIdentityOptions.App_Identity_Options)
                .AddEntityFrameworkStores<ApplicationDbContext>()
                .AddSignInManager()
-               .AddDefaultTokenProviders(); //Needed to generate tokens for password reset, change email, change phone number 2Fa
+               .AddDefaultTokenProviders(); //Needed to generate tokens for password reset, change email, change phone number 2Fa. Should probably move send sms/email to IdApi
 
             #region Health Checks
             services.AddHealthChecks()
@@ -100,6 +100,13 @@ namespace IdManagement
 
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
+            services.AddSession(options => {
+                options.Cookie.Name = Configuration["Properties:IdManagementSessionCookie"];
+                options.IdleTimeout = TimeSpan.FromMinutes(20);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+                options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
+            });
 
             services.AddAuthentication(AppAuthenticationOptions.AuthOptions)
                .AddCookie("Cookies", AppCookieOptions.CookieAuthOptions)
@@ -154,6 +161,8 @@ namespace IdManagement
             #endregion
 
             app.UseHttpsRedirection();//Can be handled by reverse proxy as can UseHsts()
+
+            app.UseSession();
 
             app.UseSecurityHeadersMiddleware(new SecurityHeadersBuilder()
                   .AddDefaultSecurePolicy()
