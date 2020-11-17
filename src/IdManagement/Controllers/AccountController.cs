@@ -782,15 +782,19 @@ namespace IdManagement.Controllers
 
 
         /// <summary>
-        /// Get User's access_token
+        /// Get User's access_token - consider doing something else with this as the more Controllers added to app, the more I need to dupicate this code (violates DRY)
         /// </summary>
         private async Task<string> GetAccessToken()
         {
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
+            string accessToken = await HttpContext.GetTokenAsync("access_token");//This will work IF User logged in through this app; which currently isn't possible.
             if (String.IsNullOrEmpty(accessToken))
             {
-                _logger.LogError("~/Account/GetAccessToken - Access token could not be retieved.");
-                throw new NullReferenceException("No Access Token found");
+                accessToken = HttpContext.Session.GetString("UserAccessToken");//The token gets passed to Home/Index when User first navigates to this app from MainClient
+                if (String.IsNullOrEmpty(accessToken))
+                {
+                    _logger.LogError("~/Account/GetAccessToken - Access token could not be retieved.");
+                    throw new NullReferenceException("No Access Token found");
+                }
             }
 
             return accessToken;

@@ -55,13 +55,20 @@ namespace IdManagement.Controllers
         }
 
         #region Helper method for rest of controller actions
+        /// <summary>
+        /// Get User's access_token - consider doing something else with this as the more Controllers added to app, the more I need to dupicate this code (violates DRY)
+        /// </summary>
         private async Task<string> GetAccessToken()
         {
-            string accessToken = await HttpContext.GetTokenAsync("access_token");
-            if (String.IsNullOrEmpty(accessToken)) 
+            string accessToken = await HttpContext.GetTokenAsync("access_token");//This will work IF User logged in through this app; which currently isn't possible.
+            if (String.IsNullOrEmpty(accessToken))
             {
-                _logger.LogError("~/Developer/GetAccessToken - Access token could not be retieved.");
-                throw new NullReferenceException("No Access Token found"); 
+                accessToken = HttpContext.Session.GetString("UserAccessToken");//The token gets passed to Home/Index when User first navigates to this app from MainClient
+                if (String.IsNullOrEmpty(accessToken))
+                {
+                    _logger.LogError("~/Account/GetAccessToken - Access token could not be retieved.");
+                    throw new NullReferenceException("No Access Token found");
+                }
             }
 
             return accessToken;
@@ -224,17 +231,30 @@ namespace IdManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> CallApiAsUser()
         {
-            HttpClient client = _httpClientFactory.CreateClient("user_client");
+            HttpClient client;
 
             string response;
+            string accessToken;
             try
             {
-                response = await client.GetStringAsync("token");
+                client = _httpClientFactory.CreateClient("user_client");
+                response = await client.GetStringAsync("token");//Will be null as User must log in through this App which is currently disabled. I may add back later.
             }
-            catch(HttpRequestException ex)
+            catch
             {
-                _logger.LogError("~/Developer/CallApiAsUser - An error occurred getting data from the IdApi App: {0}", ex);
-                throw;
+                try 
+                {
+                    accessToken = await GetAccessToken();//Token gets passed from Mainclient to this App's Home/Index endpoint, and added this App's to Session State
+                    client = _httpClientFactory.CreateClient();
+                    client.BaseAddress = new Uri(_configuration["AppURLS:IdApiBaseUrl"]);
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    response = await client.GetStringAsync("token");
+                }
+                catch (ApplicationException ex)
+                {
+                    _logger.LogError("~/Developer/CallApiAsUser - An error occurred getting data from the IdApi App: {0}", ex);
+                    throw;
+                }
             }
 
             TempData["Message"] = "Call Api as User";
