@@ -91,7 +91,7 @@ namespace IS4.AppConfiguration
             services.Configure<CookiePolicyOptions>(options =>
             {
                 options.Secure = CookieSecurePolicy.Always;//I added
-                options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;//I added
+                //options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;//I added, This will set IS4SDSC (Identity Server 4 Session Cookie) to HttpOnly, I don't want that as it causes a silentFresh redirect loop on JS Cllients
                 options.MinimumSameSitePolicy = Unspecified;
                 options.OnAppendCookie = cookieContext => CheckSameSite(cookieContext.Context, cookieContext.CookieOptions);
                 options.OnDeleteCookie = cookieContext => CheckSameSite(cookieContext.Context, cookieContext.CookieOptions);

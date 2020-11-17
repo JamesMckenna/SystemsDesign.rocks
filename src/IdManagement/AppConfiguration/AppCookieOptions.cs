@@ -61,6 +61,7 @@ namespace IdManagement.AppConfiguration
 
         internal static void CookiePolicy(CookiePolicyOptions options)
         {
+            options.CheckConsentNeeded = context => false;
             options.MinimumSameSitePolicy = SameSiteMode.Strict;
             options.Secure = CookieSecurePolicy.Always;
             options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;

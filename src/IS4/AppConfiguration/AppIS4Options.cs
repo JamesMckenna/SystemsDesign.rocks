@@ -24,14 +24,15 @@ namespace IS4.AppConfiguration
 
             options.Csp.Level = IdentityServer4.Models.CspLevel.Two;
 
+            
+
             //Session Cookie
             options.Authentication.CheckSessionCookieName = _configuration["Properties:SharedSessionCookie"];
             options.Authentication.CookieLifetime = TimeSpan.FromSeconds(Double.Parse(_configuration["LifeTimes:SessionCookieExpireSeconds"].ToString()));
-
             options.Authentication.CookieSlidingExpiration = true;
 
             options.Authentication.RequireCspFrameSrcForSignout = false;
-
+            options.MutualTls.Enabled = true;
             options.Cors.CorsPolicyName = "IS4";
         }
     }
