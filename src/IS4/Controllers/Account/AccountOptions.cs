@@ -13,7 +13,7 @@ namespace IS4.Controllers
         public static TimeSpan RememberMeLoginDuration = TimeSpan.FromDays(1);
 
         public static bool ShowLogoutPrompt = false;
-        public static bool AutomaticRedirectAfterSignOut = true;
+        public static bool AutomaticRedirectAfterSignOut = false;//Was true, I set to false
 
         public static string InvalidCredentialsErrorMessage = "Invalid Username, Email or Password";
     }
