@@ -70,12 +70,6 @@ namespace IdManagement.AppConfiguration
                     return Task.CompletedTask;
                 },
 
-                OnSignedOutCallbackRedirect = context =>
-                {
-                    context.HttpContext.Response.Cookies?.Delete(_configuration["Properties:SharedAntiForgCookie"]);
-                    return Task.CompletedTask;
-                },
-
                 OnRedirectToIdentityProvider = context =>
                 {
                     context.ProtocolMessage.Prompt = OidcConstants.PromptModes.None;
