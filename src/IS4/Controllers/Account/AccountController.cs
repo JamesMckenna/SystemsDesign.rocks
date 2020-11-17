@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -42,6 +43,7 @@ namespace IS4.Controllers
         private readonly IAuthenticationSchemeProvider _schemeProvider;
         private readonly IEventService _events;
         private readonly ILogger<AccountController> _logger;
+        private readonly IConfiguration _configuration;//I added
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -50,7 +52,8 @@ namespace IS4.Controllers
             IClientStore clientStore,
             IAuthenticationSchemeProvider schemeProvider,
             IEventService events,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -59,6 +62,7 @@ namespace IS4.Controllers
             _schemeProvider = schemeProvider;
             _events = events;
             _logger = logger;
+            _configuration = configuration;
         }
 
         #region SSO Login
@@ -375,6 +379,7 @@ namespace IS4.Controllers
                 return SignOut(new AuthenticationProperties { RedirectUri = url }, vm.ExternalAuthenticationScheme);
             }
 
+            HttpContext.Response.Cookies?.Delete(_configuration["Properties:SharedAntiForgCookie"]);//I added
             return View("LoggedOut", vm);
         }
         #endregion
