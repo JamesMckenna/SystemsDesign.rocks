@@ -47,6 +47,13 @@ namespace IdManagement.Controllers
             return View();
         }
 
+
+        public IActionResult MainClient()
+        {
+            HttpContext.Response.Cookies?.Delete(_configuration["Properties:IdManagementSessionCookie"]);
+            return Redirect(_configuration["AppURLS:MainClientBaseUrl"]);
+        }
+
         [HttpGet]
         public IActionResult Privacy()
         {

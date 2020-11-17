@@ -1,13 +1,11 @@
 ﻿@using IdentityServer4.Extensions
-@using Microsoft.Extensions.Configuration
-@inject IConfiguration Configuration
+
 @{
     string name = null;
     if (!true.Equals(ViewData["signed-out"]))
     {
         name = Context.User?.GetDisplayName();
     }
-    string mainClientUrl = Configuration["AppURLS:MainClientBaseUrl"];
 }
 
 <div class="nav-page">
@@ -16,7 +14,7 @@
 
         <div class="container">
 
-            <a href="@mainClientUrl" class="navbar-brand">
+            <a class="navbar-brand" asp-controller="Home" asp-action="MainClient">
                 <img src="~/icon.png" class="icon-banner">
                 SystemsDesign.rocks
             </a>
