@@ -76,12 +76,13 @@ namespace IS4
 
             var builder = services.AddIdentityServer(AppIS4Options.App_IS4_Options)
                 .AddSigningCredential((X509Certificate2)rsaCert)
+                .AddValidationKey((X509Certificate2)rsaCert)
                 .AddInMemoryIdentityResources(Config.IdentityResources)
                 .AddInMemoryApiScopes(Config.ApiScopes)
                 .AddInMemoryApiResources(Config.ApiResources)
                 .AddInMemoryClients(Config.Clients)
                 .AddAspNetIdentity<ApplicationUser>();
-            
+
             services.AddAuthentication("Cookies").AddCookie("Cookies");
             services.ConfigureApplicationCookie(AppCookieOptions.CookieAuthOptions);
             services.ConfigureNonBreakingSameSiteCookies();//see AppCookieOptions.cs
