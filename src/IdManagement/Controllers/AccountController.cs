@@ -16,7 +16,6 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace IdManagement.Controllers
 {
@@ -264,8 +263,9 @@ namespace IdManagement.Controllers
             }
 
             using HttpClient client = _httpClientFactory.CreateClient(_configuration["ApplicationIds:IdManagementId"]);
-            HttpResponseMessage response = await client.GetAsync($"https://localhost:6001/api/v1/Account/ConfirmEmailAsync?userId={userId}&code={code}");
-            
+            HttpResponseMessage response = await client.GetAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ConfirmEmailAsync?userId={userId}&code={code}");
+
+
             response.EnsureSuccessStatusCode();
             
             _logger.LogInformation("~/Account/ConfirmEmail - A new User has successfully confirmed thier email. User Id{0}", userId);
@@ -501,38 +501,43 @@ namespace IdManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> PasswordChanged()
         {
-            //providing a id_token to /connect/endsession is supposed to disable Logout prompt screen. 
-            //Running in Dev mode, prompt screen flashes briefly before redirecting to ResetPasswordConfirmation View
-            string idToken = await HttpContext.GetTokenAsync("id_token");
-            if (String.IsNullOrWhiteSpace(idToken))
+            string idToken = null;
+            try
             {
-                _logger.LogError("~/Account/PasswordChanged - id_token was null. User has to be logged in to hit this endpoint; id_token should not be null.");
+                //IF signed in through IdManagement
+                idToken = await HttpContext.GetTokenAsync("id_token");
+                if (String.IsNullOrWhiteSpace(idToken))
+                {
+                    //User signed in through MainClient, passed id_token in query string and stored in session state (along with User's access_token)
+                    idToken = HttpContext.Session.GetString("UserIdToken");
+                    if (String.IsNullOrWhiteSpace(idToken))
+                    {
+                        throw new ApplicationException("id_token was null");
+                    }
+                }
             }
-
-            string toEncode = $"id_token_hint={idToken}&post_logout_redirect_uri=" + _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/PasswordChanged";
-            string encoded = HttpUtility.UrlEncode(toEncode);
+            catch(ApplicationException ex)
+            {
+                 _logger.LogError("~/Account/PasswordChanged - id_token was null. User has to be logged in to hit this endpoint; id_token should not be null. Error:{0}", ex);
+                throw; 
+            }
 
             using HttpClient client = _httpClientFactory.CreateClient();
             client.BaseAddress = new Uri(_configuration["AppURLS:IS4BaseUrl"]);
-            try
-            {
-                HttpResponseMessage response = await client.GetAsync("/connect/endsession?" + encoded);
-                response.EnsureSuccessStatusCode();
-            }
-            catch (ArgumentNullException ex)
-            {
-                _logger.LogError("~/Account/PasswordChanged() - Argument Null Exception, an error occurred hitting the /connect/endsession endpoint of IS4. Error:{0}, Message:{1}", ex, ex.Message);
-                throw;
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError("An error occurred when requesting /connect/endsession endpoint from IS4 server. {0}", ex);
-                throw;
-            }
 
+            var httpContextAccessor = new HttpContextAccessor();
+            string sessionCookie = httpContextAccessor.HttpContext.Request.Cookies[_configuration["Properties:SharedSessionCookie"]];
             var prop = new AuthenticationProperties { RedirectUri = _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/ResetPasswordConfirmation" };
+            prop.Items.Add("id_token_hint", idToken);
+            prop.Items.Add("ClientId", _configuration["ApplicationIds:MainClient"]);
+            prop.Items.Add("ClientName", _configuration["ApplicationNames:MainClient"]);
+            prop.Items.Add("SessionId", sessionCookie);
+            prop.Items.Add("logoutId", idToken);
 
-            return new SignOutResult(new[] { "oidc", "Cookies" }, prop);
+            await HttpContext.SignOutAsync("Cookies");
+            await HttpContext.SignOutAsync("oidc", prop);
+
+            return RedirectToAction(nameof(ResetPasswordConfirmation));
         }
         /****************** FINSIHED When user is already logged in and wants to change password **********************/
         #endregion
@@ -796,6 +801,8 @@ namespace IdManagement.Controllers
                     throw new NullReferenceException("No Access Token found");
                 }
             }
+
+            var bp = HttpContext.Session.GetString("UserIdToken");
 
             return accessToken;
         }
