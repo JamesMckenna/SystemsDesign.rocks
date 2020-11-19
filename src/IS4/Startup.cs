@@ -64,6 +64,8 @@ namespace IS4
                 options.Preload = true;
             });
 
+            services.Configure<IISServerOptions>(options => { options.AutomaticAuthentication = false; });
+
             services.AddControllersWithViews(options => options.Filters.Add<LoggingActionFilter>());
 
             services.AddLogging();
