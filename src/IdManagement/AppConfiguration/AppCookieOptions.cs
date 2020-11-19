@@ -31,7 +31,8 @@ namespace IdManagement.AppConfiguration
 
             options.Events = new CookieAuthenticationEvents()
             {
-                OnSigningOut = async (e) => { await e.HttpContext.RevokeUserRefreshTokenAsync(); }
+                //IF User can sign into IdManagement directly, this should be used. Currently, the User signs in through MainClient ONLY. 
+                //OnSigningOut = async (e) => { await e.HttpContext.RevokeUserRefreshTokenAsync(); }
             };
 
 
