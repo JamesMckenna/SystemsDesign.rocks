@@ -65,13 +65,13 @@ namespace IdApi
                 options.User.RequireUniqueEmail = false;
             });
 
-
+            services.Configure<IISServerOptions>(options => { options.AutomaticAuthentication = false; });
 
             services.AddCors(options =>
             {
                 options.AddPolicy("default", policy =>
                 {
-                    policy.WithOrigins("https://localhost:5002", "https://localhost:5001")
+                    policy.WithOrigins(Configuration["AppURLS:IdManagementBaseUrl"], Configuration["AppURLS:IS4BaseUrl"])
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
@@ -80,7 +80,6 @@ namespace IdApi
             services.AddControllers()
             .ConfigureApiBehaviorOptions(options =>
             {
-
                 options.SuppressModelStateInvalidFilter = true;
                 options.SuppressInferBindingSourcesForParameters = true;
 
@@ -122,16 +121,15 @@ namespace IdApi
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
             .AddOAuth2Introspection("introspection", options =>
             {
-                options.Authority = "https://localhost:5001";
-
-                options.ClientId = "IdManagement";
-                options.ClientSecret = "secret";
+                options.Authority = Configuration["AppURLS:IS4BaseUrl"];
+                options.ClientId = Configuration["AppIds:IdManagementId"];
+                options.ClientSecret = Configuration["AppSecrets:IdManagementId"];
             })
             .AddIdentityServerAuthentication("IdentityServerAccessToken", options =>
             {
-                options.Authority = "https://localhost:5001";
-                options.ApiName = "IdApi";
-                options.ApiSecret = "secret";
+                options.Authority = Configuration["AppURLS:IS4BaseUrl"];
+                options.ApiName = Configuration["ApplicationIds:IdApiId"];
+                options.ApiSecret = Configuration["ApplicationSecrets:IdApiSecret"];
 
                 //Using Reference Tokens - lessons calls to IS4 to validate tokens
                 options.EnableCaching = true; //REQUIRES: services.AddDistributedMemoryCache();
