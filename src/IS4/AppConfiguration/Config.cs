@@ -68,6 +68,7 @@ namespace IS4.AppConfiguration
 
                     PostLogoutRedirectUris = new string[] {
                         _configuration["AppURLS:IdManagementBaseUrl"] + "/signout-callback-oidc",
+                        _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/PasswordChanged",
                         _configuration["AppURLS:IdManagementBaseUrl"] + "/Manage/ResetPasswordConfirmation"
                     },
 
