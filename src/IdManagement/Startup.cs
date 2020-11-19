@@ -67,6 +67,8 @@ namespace IdManagement
             });
             #endregion
 
+            services.Configure<IISServerOptions>(options => { options.AutomaticAuthentication = false; });
+
             services.AddControllersWithViews(AppMvcOptions.MVCControllerOptions);
 
             services.AddHttpContextAccessor();
