@@ -1,13 +1,15 @@
-﻿
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "ConfirmEmail";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    string SystemsDesignHomePage = Configuration["AppURLS:MainClientBaseUrl"];
 }
 
 <h1>@ViewData["Title"].</h1>
 <div>
     <h5>
-        Thank you for confirming your email. You can now <a asp-protocol="https" asp-host="localhost:5002" asp-controller="Account" asp-action="Login">Log in here</a>.
+        Thank you for confirming your email.<a href="@SystemsDesignHomePage">Back to Systems Design Home Page</a>.
     </h5>
 </div>
 
