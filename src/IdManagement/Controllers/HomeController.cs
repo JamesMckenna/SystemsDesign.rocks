@@ -19,12 +19,9 @@ namespace IdManagement.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index([FromQuery] string ut)//ut = access token from MainClient. There is probably a more secure way. Think on this as the appication evoles.
+        public IActionResult Index([FromQuery] string ut, [FromQuery] string idt)//ut = access token, idt = id_token from MainClient. There is probably a more secure way. Think on this as the appication evoles.
         {
-            //ViewData["User"] = (HttpContext.User.Identity.IsAuthenticated) 
-            //    ? "Hello: " + HttpContext.User.Claims.First(c => c.Type == "name").Value 
-            //    : "You're not signed in?";
-
+            //Don't delete this Action or IndexView. Will probably need it once I implement Authorization Polices and Administrator Management. 
 
             //To notify User of session timeout and auto log out
             //The Identity Model package for Identity Server 4 doesn't have (or need, tokens refresh when auto for interactive clients) silent renew functionality.
@@ -33,9 +30,10 @@ namespace IdManagement.Controllers
             //I need to find/code a way to refresh the User session without doing a hard refresh/page navigation or implement session state.
             //Save any form fields/User input to session state, prompt User to do a hard refresh and then reload any User input from session state. 
             
-            if (HttpContext.User != null && !String.IsNullOrWhiteSpace(ut))
+            if (HttpContext.User != null && !String.IsNullOrWhiteSpace(ut) && !String.IsNullOrWhiteSpace(idt))
             {
                 HttpContext.Session.SetString("UserAccessToken", ut);
+                HttpContext.Session.SetString("UserIdToken", idt);
             }
             else
             {
@@ -43,13 +41,16 @@ namespace IdManagement.Controllers
                 //Currently User can only log in through MainClient.
                 return LocalRedirect(_configuration["AppURLS:IdManagementBaseUrl"] + "/Account/Login");
             }
-                    
-            return View();
+
+            //return View();
+            return LocalRedirect("~/Account/Index");
         }
 
-
+        [AllowAnonymous]
+        [HttpGet]
         public IActionResult MainClient()
         {
+            //Delete the session cookie when leaving IdManagement app, no need for browser to hold onto useless cookie.
             HttpContext.Response.Cookies?.Delete(_configuration["Properties:IdManagementSessionCookie"]);
             return Redirect(_configuration["AppURLS:MainClientBaseUrl"]);
         }
