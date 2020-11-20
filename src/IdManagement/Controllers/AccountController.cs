@@ -25,7 +25,7 @@ namespace IdManagement.Controllers
     {
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AccountController> _logger;
-        private IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
         private readonly ISmsSender _smsSender;
         private readonly IHttpClientFactory _httpClientFactory;
 
@@ -801,8 +801,6 @@ namespace IdManagement.Controllers
                     throw new NullReferenceException("No Access Token found");
                 }
             }
-
-            var bp = HttpContext.Session.GetString("UserIdToken");
 
             return accessToken;
         }
