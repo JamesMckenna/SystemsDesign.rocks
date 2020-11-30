@@ -77,7 +77,7 @@ namespace IdManagement
 
 
             //Eventually - Remove DB access and Indentity Core. Should all be through IdApi. Need to find a way to email from this app without having Identity as a dependency
-            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlite(Configuration["IdMangementConnectionStrings:IdManagementDbConnection"]));
+            services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration["IdMangementConnectionStrings:IdentityDB"]));
 
             services.AddIdentityCore<ApplicationUser>(AppIdentityOptions.App_Identity_Options)
                .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -102,6 +102,7 @@ namespace IdManagement
 
             JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
+            //CURRENTLY NOT USED
             services.AddSession(options => {
                 options.Cookie.Name = Configuration["Properties:IdManagementSessionCookie"];
                 options.IdleTimeout = TimeSpan.FromMinutes(20);
