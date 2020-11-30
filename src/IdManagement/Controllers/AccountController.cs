@@ -56,7 +56,7 @@ namespace IdManagement.Controllers
         {
             try
             {
-                await HttpContext.ChallengeAsync("oidc", new AuthenticationProperties { RedirectUri = "/" });
+                await HttpContext.ChallengeAsync("oidc", new AuthenticationProperties { RedirectUri = "Home/Index" });
             }
             catch (Exception ex)
             {
@@ -178,7 +178,7 @@ namespace IdManagement.Controllers
             string userName;
             try
             {
-                userName = await client.GetStringAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ValidUserNameAsync?userName={model.UserName}");
+                userName = await client.GetStringAsync($"api/v1/Account/ValidUserNameAsync?userName={model.UserName}");
                 if (userName == "true")
                 {
                     ModelState.AddModelError("Error", $"UserName {model.UserName} has been taken.");
@@ -194,7 +194,7 @@ namespace IdManagement.Controllers
             string email;
             try
             {
-                email = await client.GetStringAsync($"{_configuration["AppURLS:IdApiBaseUrl"]}/api/v1/Account/ValidUserEmailAsync?email={model.Email}");
+                email = await client.GetStringAsync($"api/v1/Account/ValidUserEmailAsync?email={model.Email}");
                 if (email == "true")
                 {
                     ModelState.AddModelError("Error", $"Email {model.Email} has been taken.");
