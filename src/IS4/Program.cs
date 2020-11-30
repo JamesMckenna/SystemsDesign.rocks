@@ -31,9 +31,9 @@ namespace IS4
             .MinimumLevel.Override("Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware", LogEventLevel.Fatal)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("Assembly", $"{name.Name}")
-            .Filter.ByExcluding("RequestPath = '/lib/*' or StatusCode = 200")
-            .Filter.ByExcluding("RequestPath = '/js' or StatusCode = 200")
-            .Filter.ByExcluding("RequestPath = '/css' or StatusCode = 200")
+            //.Filter.ByExcluding("RequestPath = '/lib/*' or StatusCode = 200")
+            //.Filter.ByExcluding("RequestPath = '/js' or StatusCode = 200")
+            //.Filter.ByExcluding("RequestPath = '/css' or StatusCode = 200")
             .WriteTo.Console()
             .WriteTo.Providers(Providers)
             .WriteTo.File(".\\Logs\\IS4.log", LogEventLevel.Information,
