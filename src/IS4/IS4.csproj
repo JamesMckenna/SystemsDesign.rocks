@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>9ee6d802-0e4f-47b9-8bf8-13db6b13d3b5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,9 +19,8 @@
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="3.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="3.1.8" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="3.1.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.8" />
+
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.8" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
 
@@ -33,8 +33,6 @@
     <PackageReference Include="Serilog.Enrichers.Process" Version="2.0.1" />
 
     <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
-
-    <PackageReference Include="Serilog.Filters.Expressions" Version="2.1.0" />
 
     <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
 
