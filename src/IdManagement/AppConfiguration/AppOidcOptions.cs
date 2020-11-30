@@ -29,6 +29,8 @@ namespace IdManagement.AppConfiguration
             options.GetClaimsFromUserInfoEndpoint = true;//keeps id_token smaller
             options.SaveTokens = true;
             options.SignedOutCallbackPath = new PathString("/signout-callback-oidc");
+            
+            options.CallbackPath = "/signin-oidc";
 
             options.TokenValidationParameters = new TokenValidationParameters
             {
@@ -63,6 +65,7 @@ namespace IdManagement.AppConfiguration
 
             options.Events = new OpenIdConnectEvents
             {
+
                 OnRemoteFailure = (context) =>
                 {
                     context.Response.Redirect("/Account/AccessDenied");
