@@ -96,7 +96,7 @@ namespace IdManagement.Services.MessageService
 
             var bodyBuilder = new MimeKit.BodyBuilder
             {
-                HtmlBody = callbackUrl
+                HtmlBody = $"<p>If this email comes to your junk folder, copy and paste the link into your browser's address bar, OR click the 'Not Junk' link to move this email to your inbox. At which point, the link will become clickable and it will tell your email client that further emails from Systems Design is safe to put into the inbox.</p><br /><br /> {callbackUrl}"
             };
             mimeMessage.Body = bodyBuilder.ToMessageBody();
 
