@@ -40,7 +40,7 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 * Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend. The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for the blogging CRUD operations. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application. Automated testing will be needed.
 
-* Currently, the AppilcationUser class is inherited from ASP.Net IdentityUser. Eventually, the ApplicationUser class will need more properties and behaviour. Things to keep in mind: ApplicationUser could be an individual or an organization, and as such, ApplicationUser may itself become a base class for the larger applcation / services.
+* Currently, the AppilcationUser class is inherited from ASP.Net IdentityUser. Eventually, the ApplicationUser class will need more properties and behaviour. Things to keep in mind: ApplicationUser could be an individual or an organization, and as such, ApplicationUser may itself become a base class for the larger appilcation / services.
 
 * Containerize all services
 
