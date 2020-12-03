@@ -22,6 +22,8 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 
 #### TODO:
+* Tweak Logging. Logging for all services will need to be expanded upon and improved.
+
 * Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will need pages to add new roles and claims that are organization specific . These roles and claims will be persisted to the User Database through the IdApi.
 
 *  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. 
@@ -32,5 +34,9 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 * Implement a UI so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
 
-* Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend. The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for blogging CRUD operations as well as automated testing. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application.   
+* Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend. The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for blogging CRUD operations as well as automated testing. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application.
+
+* Containerize all services
+
+
 
