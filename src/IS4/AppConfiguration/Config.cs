@@ -69,7 +69,7 @@ namespace IS4.AppConfiguration
                     PostLogoutRedirectUris = new string[] {
                         _configuration["AppURLS:IdManagementBaseUrl"] + "/signout-callback-oidc",
                         _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/PasswordChanged",
-                        _configuration["AppURLS:IdManagementBaseUrl"] + "/Manage/ResetPasswordConfirmation"
+                        _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/ResetPasswordConfirmation"
                     },
 
                     AllowedCorsOrigins = new string[] {
@@ -151,7 +151,7 @@ namespace IS4.AppConfiguration
 
                     RequirePkce = true,
                     AllowPlainTextPkce = false,
-                    RequireConsent = true,
+                    RequireConsent = false,
 
                     AlwaysIncludeUserClaimsInIdToken = true,
 
