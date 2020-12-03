@@ -1,13 +1,13 @@
 # SystemsDesign.rocks
 ## Project Notes
-The SystemsDesign.rocks project is an Authorization, Authentication and User Management service. The project design is to follow Service Orientated Architecture and horizontal scaling. As such, the secure token service has been implemented using Reference Tokens rather than Self-Contained, Json Web Tokens. As a result, clients and resources will be making request to the STS multiple times per single User interaction and under heavy load could cause issues – the decision was made to separate the STS from User Management and User Data Access.
+The SystemsDesign.rocks project is an Authorization, Authentication and User Management service. The project design is to follow Service Orientated Architecture and horizontal scaling. As such, the secure token service has been implemented using Reference Tokens rather than Self-Contained, Json Web Tokens. As a result, clients and resources will be making requests to the STS multiple times per single User interaction, and under heavy load, could cause issues – the decision was made to separate the STS from User Management and User Data Access.
 
 Currently, the STS contacts the User Database directly and will be changed in later iterations to pull User Data from IdApi which in turn, pulls from the User Database.
 
 IdManagement is the client application with which a User can register an account and manage their account. It will also allow one with elevated privileges to register users, assign or revoke a user’s privileges.   
    
 #### IdApi: 
-IdApi is a base implementation of Microsoft’s ASP.Net Core Identity and ASP.Net Core Entity Framework. At this point, only the base implementation of the UserManager class is implemented, though for any functionality that is not provided out-of-the-box, a domain layer and data access layer will be added.
+IdApi is a base implementation of Microsoft’s ASP.Net Core Identity and ASP.Net Core Entity Framework. At this point, only the base implementation of the UserManager class is implemented, though for any functionality that is not provided out-of-the-box, a domain layer and data access layer will be added (right now it is just an MVC Controller).
 
 In later iterations, the SignInManager class will also be implemented, and like the UserManager, if any functionality not built into ASP.Net Core Identity is required, that functionality can be added  to the BLL and DAL. 
 
@@ -36,7 +36,7 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 * Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application. This will give more freedom to an organization, allow for a better CI/CD pipeline in a multi-service application. Will allow developers to build new applications / services with full login and authorization support from thier development environment.      
 
-* Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
+* Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS. This will allow for the development enviroment to simulate a full production enviroment regarding authentication and authorization. It should decrease the bugs if an app / service is being developed using a deployed STS.
 
 * Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend. The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for the blogging CRUD operations. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application. Automated testing will be needed.
 
