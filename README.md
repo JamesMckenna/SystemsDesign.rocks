@@ -9,6 +9,11 @@ IdManagement is the client application with which a User can register an account
 #### IdApi: 
 IdApi is a base implementation of Microsoft’s ASP.Net Core Identity and ASP.Net Core Entity Framework. At this point, only the base implementation of the UserManager class is implemented, though for any functionality that is not provided out-of-the-box, a domain layer and data access layer will be added.
 
-In later iterations, the SignInManager class will also be implemented, and like the UserManager, if any functionality not built into ASP.Net Core Identity is required, that functionality can be added  to the BLL and DAL.  
+In later iterations, the SignInManager class will also be implemented, and like the UserManager, if any functionality not built into ASP.Net Core Identity is required, that functionality can be added  to the BLL and DAL. 
+
+#### IdManagement
+
+The DotNet Core 3.1 application, IdManagement, is a MVC client interface for user management.  Account registration and account management will be handled via this client. In future iterations, an administrator will have the ability to add a user account, disable a user account, elevate a user’s privilege to access functionality, or remove privilege to functionality.  
+
  
 
