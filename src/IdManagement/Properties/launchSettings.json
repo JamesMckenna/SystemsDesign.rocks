@@ -2,6 +2,10 @@
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
+    "iis": {
+      "applicationUrl": "http://localhost/IdManagement",
+      "sslPort": 0
+    },
     "iisExpress": {
       "applicationUrl": "https://localhost:44302",
       "sslPort": 44302
@@ -10,18 +14,16 @@
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
-      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "IdManagement": {
       "commandName": "Project",
-      "launchBrowser": false,
       "environmentVariables": {
         "SECRETS_PATH": "C:\\Secrets\\AppSecrets.json",
         "SECRETS_DIR": "C:\\Secrets\\",
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Production"
       },
       "applicationUrl": "https://localhost:5002"
     }
