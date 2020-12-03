@@ -7,6 +7,8 @@ Currently, the STS contacts the User Database directly and will be changed in la
 IdManagement is the client application with which a User can register an account and manage their account. It will also allow one with elevated privileges to register users, assign or revoke a user’s privileges.   
    
 #### IdApi: 
-IdApi is to be the  
-ASP.Net Core Identity - 
+IdApi is a base implementation of Microsoft’s ASP.Net Core Identity and ASP.Net Core Entity Framework. At this point, only the base implementation of the UserManager class is implemented, though for any functionality that is not provided out-of-the-box, a domain layer and data access layer will be added.
+
+In later iterations, the SignInManager class will also be implemented, and like the UserManager, if any functionality not built into ASP.Net Core Identity is required, that functionality can be added  to the BLL and DAL.  
+ 
 
