@@ -11,9 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdApi", "src\IdApi\IdApi.cs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdManagement", "src\IdManagement\IdManagement.csproj", "{D497EC07-485A-439C-A824-42015122AEAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityCommon", "IdentityCommon\IdentityCommon.csproj", "{50E8C484-146E-40CA-8E04-EEB2442FA17F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityCommon", "IdentityCommon\IdentityCommon.csproj", "{50E8C484-146E-40CA-8E04-EEB2442FA17F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityDataCommon", "IdentityDataCommon\IdentityDataCommon.csproj", "{D67DD7EB-7009-4DD8-A377-02E04D9C9998}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityDataCommon", "IdentityDataCommon\IdentityDataCommon.csproj", "{D67DD7EB-7009-4DD8-A377-02E04D9C9998}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
