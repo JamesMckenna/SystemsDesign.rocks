@@ -28,13 +28,13 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 * Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will need pages to add new roles and claims that are organization specific . These roles and claims will be persisted to the User Database through the IdApi.
 
-*  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. 
+*  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. The intent is to have a loosely coupled client, a client that makes a request to a 'black-box' that handles all user data.  
 
-* Remove SignInManager from IS4. Make requests to IdApi for all user related data.
+* Remove SignInManager from IS4. IS4 should make requests to IdApi for all user related data. Currently, IS4 makes requests directly to the User Database.
 
 * Remove AddDistributedMemoryCache() and implement a better caching strategy.
 
-* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application.
+* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application. This will give more freedom to an organization, allow for a better CI/CD pipeline in a multi-service application. Will allow developers to build new applications / services with full login and authorization support from thier development environment.      
 
 * Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
 
