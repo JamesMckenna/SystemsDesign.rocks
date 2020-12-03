@@ -17,5 +17,8 @@ The DotNet Core 3.1 application, IdManagement, is a MVC client interface for use
 
 
 #### IS4:
+
+IS4 is an implementation of the Identity Server 4, Secure Token Service. It has been built as its own application – rather than as a middleware service of a larger application – to handle multiple concurrent requests for token generation, token validation and token management.     
+
  
 
