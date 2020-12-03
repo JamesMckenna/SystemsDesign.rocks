@@ -22,13 +22,15 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 
 #### TODO:
-1. Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will have an pages to add new roles and claims that are organization specific . These roles and claims will be persisted to the User Database through the IdApi.
+* Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will have an pages to add new roles and claims that are organization specific . These roles and claims will be persisted to the User Database through the IdApi.
 
-2. Remove SignInManager from IS4. Make requests to IdApi for all user related needs.
+*  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. 
 
-3. Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client application and service api’s to be added without needing to rebuild and re-deploy the STS.
+* Remove SignInManager from IS4. Make requests to IdApi for all user related needs.
 
-4. Implement a UI so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
+* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client application and service api’s to be added without needing to rebuild and re-deploy the STS.
 
-5. Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend.  
+* Implement a UI so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
+
+* Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend.  
 
