@@ -22,19 +22,23 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 
 #### TODO:
-* Tweak Logging. Logging for all services will need to be expanded upon and improved.
+* Tweak Logging. Logging for all services will need to be expanded upon and improved. It is anticipated that this will be ongoing throughout the SDLC iterations. In a future iteration, move logs from flat file to a database (NOSQL?).
 
 * Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will need pages to add new roles and claims that are organization specific . These roles and claims will be persisted to the User Database through the IdApi.
 
 *  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. 
 
-* Remove SignInManager from IS4. Make requests to IdApi for all user related needs.
+* Remove SignInManager from IS4. Make requests to IdApi for all user related data.
 
-* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client application and service api’s to be added without needing to rebuild and re-deploy the STS.
+* Remove AddDistributedMemoryCache() and implement a better caching strategy.
 
-* Implement a UI so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
+* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client application and service APIs to be added without needing to rebuild and re-deploy the STS application.
+
+* Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS as they become ready for deployment.
 
 * Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend. The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for blogging CRUD operations as well as automated testing. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application.
+
+* Currently, the AppilcationUser class is inherited from ASP.Net IdentityUser. Eventually, the ApplicationUser class will need more properties and behaviour. Things to keep in mind: ApplicationUser could be an individual or an organization, and as such ApplicationUser may itself become a base class for the larger applcation / services.
 
 * Containerize all services
 
