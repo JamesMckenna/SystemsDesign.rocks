@@ -501,20 +501,10 @@ namespace IdManagement.Controllers
         [HttpGet]
         public async Task<IActionResult> PasswordChanged()
         {
-            string idToken = null;
+            string accessToken = null;
             try
             {
-                //IF signed in through IdManagement
-                idToken = await HttpContext.GetTokenAsync("id_token");
-                if (String.IsNullOrWhiteSpace(idToken))
-                {
-                    //User signed in through MainClient, passed id_token in query string and stored in session state (along with User's access_token)
-                    idToken = HttpContext.Session.GetString("UserIdToken");
-                    if (String.IsNullOrWhiteSpace(idToken))
-                    {
-                        throw new ApplicationException("id_token was null");
-                    }
-                }
+                accessToken = await HttpContext.GetTokenAsync("access_token");
             }
             catch(ApplicationException ex)
             {
@@ -522,20 +512,20 @@ namespace IdManagement.Controllers
                 throw; 
             }
 
-            using HttpClient client = _httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(_configuration["AppURLS:IS4BaseUrl"]);
+            //using HttpClient client = _httpClientFactory.CreateClient();
+            //client.BaseAddress = new Uri(_configuration["AppURLS:IS4BaseUrl"]);
 
-            var httpContextAccessor = new HttpContextAccessor();
-            string sessionCookie = httpContextAccessor.HttpContext.Request.Cookies[_configuration["Properties:SharedSessionCookie"]];
-            var prop = new AuthenticationProperties { RedirectUri = _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/ResetPasswordConfirmation" };
-            prop.Items.Add("id_token_hint", idToken);
-            prop.Items.Add("ClientId", _configuration["ApplicationIds:MainClient"]);
-            prop.Items.Add("ClientName", _configuration["ApplicationNames:MainClient"]);
-            prop.Items.Add("SessionId", sessionCookie);
-            prop.Items.Add("logoutId", idToken);
+            //var prop = new AuthenticationProperties { RedirectUri = _configuration["AppURLS:IdManagementBaseUrl"] + "/Account/ResetPasswordConfirmation" };
+            //prop.Items.Add("id_token_hint", accessToken);
+            //prop.Items.Add("ClientId", _configuration["ApplicationIds:MainClient"]);
+            //prop.Items.Add("ClientName", _configuration["ApplicationNames:MainClient"]);
+            //prop.Items.Add("SessionId", sessionCookie);
+            //prop.Items.Add("logoutId", idToken);
+            //await HttpContext.SignOutAsync("Cookies");
+            //await HttpContext.SignOutAsync("oidc", prop);
 
             await HttpContext.SignOutAsync("Cookies");
-            await HttpContext.SignOutAsync("oidc", prop);
+            await HttpContext.SignOutAsync("oidc");
 
             return RedirectToAction(nameof(ResetPasswordConfirmation));
         }
@@ -791,15 +781,12 @@ namespace IdManagement.Controllers
         /// </summary>
         private async Task<string> GetAccessToken()
         {
-            string accessToken = await HttpContext.GetTokenAsync("access_token");//This will work IF User logged in through this app; which currently isn't possible.
+            string accessToken = await HttpContext.GetTokenAsync("access_token");
+   
             if (String.IsNullOrEmpty(accessToken))
             {
-                accessToken = HttpContext.Session.GetString("UserAccessToken");//The token gets passed to Home/Index when User first navigates to this app from MainClient
-                if (String.IsNullOrEmpty(accessToken))
-                {
-                    _logger.LogError("~/Account/GetAccessToken - Access token could not be retieved.");
-                    throw new NullReferenceException("No Access Token found");
-                }
+                _logger.LogError("~/Account/GetAccessToken - Access token could not be retieved.");
+                throw new NullReferenceException("No Access Token found");
             }
 
             return accessToken;
