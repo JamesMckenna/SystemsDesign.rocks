@@ -20,9 +20,9 @@
       "commandName": "Project",
       "environmentVariables": {
         "SECRETS_PATH": "C:\\Secrets\\AppSecrets.json",
-        "SECRETS_DIR": "C:\\Secrets\\",
         "seed": "true",
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "SECRETS_DIR": "C:\\Secrets\\",
+        "ASPNETCORE_ENVIRONMENT": "Production"
       },
       "applicationUrl": "https://localhost:6001"
     }
