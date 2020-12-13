@@ -34,7 +34,7 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 * Remove AddDistributedMemoryCache() and implement a better caching strategy.
 
-* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application. This will give more freedom to an organization, allow for a better CI/CD pipeline in a multi-service application. Will allow developers to build new applications / services with full login and authorization support from thier development environment.      
+* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application. This will give more freedom to an organization, allow for a better CI/CD pipeline in a multi-service application, and will make it easier developers to build new applications / services with full login and authorization support from thier development environment.      
 
 * Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS. This will allow for the development enviroment to simulate a full production enviroment regarding authentication and authorization. It should decrease the bugs if an app / service is being developed using a deployed STS.
 
