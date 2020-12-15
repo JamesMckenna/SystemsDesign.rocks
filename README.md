@@ -24,27 +24,29 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 #### TODO:
 * Automated testing
 
+* Implement Unit of Work and Repository Design Patterns for IdApi. At this point, the Api is so basic the design patterns have not been implemented
+
 * CI / CD pipeline - currently just building to a folder and using ftp to deploy to IIS
 
-* Tweak Logging. Logging for all services will need to be expanded upon and improved. It is anticipated that this will be ongoing throughout the SDLC iterations. In a future iteration, move logs from flat file to a database (NOSQL?).
+* Tweak Logging. Logging for all services will need to be expanded upon and improved. It is anticipated that this will be ongoing throughout the SDLC iterations. In a future iteration, move logs from flat file to a database (NOSQL).
 
-* Ongoing monitoring of http headers and content sercuirty policies.  
+* Ongoing monitoring of http headers and content security policies 
 
-* Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will need pages to add new roles and claims that are organization specific . These roles and claims will be persisted to the User Database through the IdApi.
+* Add Authorization Policies, the out-of-the-box User Roles and User Claims required by an organization to build upon.  Roles such as Administrator, Manager, Member and Developer with claims for read, write, update and delete privileges.  IdManagement will need pages to add new roles and claims that are organization specific. These roles and claims will be persisted to the User Database through the IdApi.
 
-*  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. The intent is to have a loosely coupled client, a client that makes a request to a 'black-box' that handles all user data.  
+*  Move email sending and SMS messaging responsibility from IdManagement to IdApi. Remove ASP.Net Core Identity dependency from IdManagement. The intent is to have a loosely coupled client; a client that makes a request to a 'black-box' that handles all user data.
 
 * Remove SignInManager from IS4. IS4 should make requests to IdApi for all user related data. Currently, IS4 makes requests directly to the User Database.
 
 * Remove AddDistributedMemoryCache() and implement a better caching strategy.
 
-* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application. This will give more freedom to an organization, allow for a better CI/CD pipeline in a multi-service application, and will make it easier developers to build new applications / services with full login and authorization support from thier development environment.      
+* Remove the InMemory implementation for Identity Server 4 configuration and operational data. Implementing persistent storage for both configuration data and operations data will allow for client applications and service APIs to be added without needing to rebuild and re-deploy the STS application. This will give more freedom to an organization, allow for a better CI/CD pipeline in a multi-service application, and will make it easier developers to build new applications / services with full login and authorization support from their development environment.      
 
-* Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS. This will allow for the development enviroment to simulate a full production enviroment regarding authentication and authorization. It should decrease the bugs if an app / service is being developed using a deployed STS.
+* Add a UI and functionality to IS4 so one with the Developer Role can add client applications and service APIs to the STS. This will allow the development environment to simulate a full production environment regarding authentication and authorization. It should decrease the bugs if an app / service is being developed using a deployed STS.
 
-* Make the public facing applications / web pages look pretty. A homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework. Leaning towards VueJs with a DotNet Core backend. The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for the blogging CRUD operations. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application. Automated testing will be needed.
+* Make the public facing applications / web pages look pretty, a homogenous layout and design theme across the IdManagement, IS4 Login / Logout, and Main Client applications. Come to a decision on a Main Client framework (leaning towards VueJs with a DotNet Core backend). The Main Client app is the main public facing website with blogging functionality. With it, an API will be needed for the blogging CRUD operations. If Backend For Frontend Architecture is used, this can all be built as a single Dot Net Core application. Automated testing will be needed.
 
-* Currently, the AppilcationUser class is inherited from ASP.Net IdentityUser. Eventually, the ApplicationUser class will need more properties and behaviour. Things to keep in mind: ApplicationUser could be an individual or an organization, and as such, ApplicationUser may itself become a base class for the larger appilcation / services.
+* Currently, the AppilcationUser class is inherited from ASP.Net IdentityUser. Eventually, the ApplicationUser class will need more properties. Things to keep in mind: ApplicationUser could be an individual or an organization. ApplicationUser may itself become a base class for the larger application / services.
 
 * Containerize all services
 
