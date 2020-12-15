@@ -22,6 +22,10 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 
 
 #### TODO:
+* Automated testing
+
+* CI / CD pipeline - currently just building to a folder and using ftp to deploy to IIS
+
 * Tweak Logging. Logging for all services will need to be expanded upon and improved. It is anticipated that this will be ongoing throughout the SDLC iterations. In a future iteration, move logs from flat file to a database (NOSQL?).
 
 * Ongoing monitoring of http headers and content sercuirty policies.  
