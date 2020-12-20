@@ -24,7 +24,7 @@ IS4 is an implementation of the Identity Server 4, Secure Token Service. It has 
 #### TODO:
 * Automated testing
 
-* Implement Unit of Work and Repository Design Patterns for IdApi. At this point, the Api is so basic the design patterns have not been implemented
+*  To implement Unit of Work and Repository Design Patterns for IdApi. [This blog](https://www.thereformedprogrammer.net/is-the-repository-pattern-useful-with-entity-framework-core/) argues differently. Looking into this more
 
 * CI / CD pipeline - currently just building to a folder and using ftp to deploy to IIS
 
