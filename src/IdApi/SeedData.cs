@@ -102,6 +102,39 @@ namespace IdApi
                     {
                         Log.Debug("bob already exists");
                     }
+
+                    var james = userMgr.FindByNameAsync("james").Result;
+                    if (james == null)
+                    {
+                        james = new ApplicationUser
+                        {
+                            UserName = "james",
+                            Email = "g.james.mckenna@hotmail.com",
+                            EmailConfirmed = true
+                        };
+                        var result = userMgr.CreateAsync(james, "Pass123$").Result;
+                        if (!result.Succeeded)
+                        {
+                            throw new Exception(result.Errors.First().Description);
+                        }
+
+                        result = userMgr.AddClaimsAsync(james, new Claim[]{
+                            new Claim(JwtClaimTypes.Name, "James McKenna"),
+                            new Claim(JwtClaimTypes.GivenName, "James"),
+                            new Claim(JwtClaimTypes.FamilyName, "McKenna"),
+                            new Claim(JwtClaimTypes.WebSite, "https://systemsdesign.rocks"),
+                            new Claim("location", "somewhere")
+                        }).Result;
+                        if (!result.Succeeded)
+                        {
+                            throw new Exception(result.Errors.First().Description);
+                        }
+                        Log.Debug("james created");
+                    }
+                    else
+                    {
+                        Log.Debug("james already exists");
+                    }
                 }
             }
         }
