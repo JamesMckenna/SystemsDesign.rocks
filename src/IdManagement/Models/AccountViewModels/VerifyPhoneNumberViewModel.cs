@@ -7,8 +7,8 @@ namespace IdManagement.Models.AccountViewModels
         [Required]
         public string Code { get; set; }
 
-        [Required]
-        [Phone]
+        [Required(ErrorMessage = "A vaild phone number must be provided.")]
+        [Phone(ErrorMessage = "A vaild phone number was not provided.")]
         [Display(Name = "Phone number")]
         public string PhoneNumber { get; set; }
 

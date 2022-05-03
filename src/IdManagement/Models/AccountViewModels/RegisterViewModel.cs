@@ -6,19 +6,20 @@ namespace IdManagement.Models.AccountViewModels
     {
         [Required]
         [RegularExpression(@"^[a-zA-Z0-9-._+]{4,25}$", ErrorMessage = "Upper or lowercase English letters a - z, numbers 0 - 9, and - . _ + are valid characters for User Name")]
-        [StringLength(25, ErrorMessage = "User Name must be unique and at least {0} characters long.", MinimumLength = 4)]
+        [StringLength(25, ErrorMessage = "{0} must be unique and between {2} and {1} characters long.", MinimumLength = 4)]
         [Display(Name = "User Name")]
         public string UserName { get; set; }
 
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "A unique email must be provided to create an account.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The password must be at least {0} characters long.", MinimumLength = 6)]
+        [StringLength(25, ErrorMessage = "The {0} must be between {2} and {1} characters long .", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
+        [RegularExpression(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{6,25}$", ErrorMessage = "Your password must be at least 6 characters long, contain at least 1 uppercase, at least 1 lowercase, at least 1 letter, at least 1 number and at least 1 of the following special characters # ? ! @ $ % ^ & * -")]
         public string Password { get; set; }
 
         [DataType(DataType.Password)]

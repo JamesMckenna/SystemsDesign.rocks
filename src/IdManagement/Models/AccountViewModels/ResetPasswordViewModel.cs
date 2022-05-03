@@ -4,13 +4,14 @@ namespace IdManagement.Models.AccountViewModels
 {
     public class ResetPasswordViewModel
     {
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "The account's email address must be provided to reset the password.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
         public string Email { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        [StringLength(25, ErrorMessage = "The {0} must be between {2} and {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
+        [RegularExpression(@"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{6,25}$", ErrorMessage = "Your password must be at least 6 characters long, contain at least 1 uppercase, at least 1 lowercase, at least 1 letter, at least 1 number and at least 1 of the following special characters # ? ! @ $ % ^ & * -")]
         public string Password { get; set; }
 
         [DataType(DataType.Password)]
