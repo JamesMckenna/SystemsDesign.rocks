@@ -37,7 +37,7 @@ namespace IS4
 
         public void ConfigureServices(IServiceCollection services)
         {
-            var rsaCert = new X509Certificate2(Path.Combine(Configuration["SECRETS_DIR"], "IS4OpenSsl.pfx"), "CertIS4");
+            var rsaCert = new X509Certificate2(Path.Combine(Configuration["SECRETS_DIR"], "IS4.pfx"), Configuration["CertPassPhrase:PassPhrase"]);
 
             services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(Configuration["SECRETS_DIR"]))
                 .SetApplicationName(Configuration["Properties:ApplicationName"]);
